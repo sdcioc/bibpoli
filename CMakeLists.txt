@@ -147,7 +147,11 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/experiment_distance.py
+  scripts/bib_poli_prime.py
+  scripts/bib_poli_face_dect.py
+  scripts/bib_poli_key_teleop.py
+  scripts/bib_poli_manual_interface.py
+  scripts/bib_poli_poi_manager.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
