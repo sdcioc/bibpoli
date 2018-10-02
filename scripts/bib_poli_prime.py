@@ -333,7 +333,7 @@ class ExperimentLogicManager:
 
         # GIVE THE cOMMAND FOR GOING
         next_command = {};
-        next_command['type'] = "GOTO_PARENT_POI";
+        next_command['type'] = "GOTO_POI";
         rospy.sleep(1);
         rospy.loginfo("[START_NEXT_POI] publish next command");
         self.command_pub.publish(json.dumps(next_command));
@@ -378,11 +378,14 @@ class ExperimentLogicManager:
                 if(self.tries == 3):
                     self.tries = 0;
                     self.sound_manager.play_let_me_pass();
-                rospy.slep(1);
+                rospy.sleep(1);
                 self.clear_costmaps();
                 rospy.sleep(2);
                 self.move_pub.publish(self.poi_position);
                 self.rate.sleep();
+            else:
+                rospy.loginfo("[VERIFY_DISTANCE_POI] reset tries {} ".format(self.tries));
+                self.tries = 0;
             next_command = {}
             next_command['type'] = "VERIFY_DISTANCE_POI";
             self.last_point = self.current_position;
