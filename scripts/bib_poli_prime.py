@@ -368,11 +368,13 @@ class ExperimentLogicManager:
         self.rate.sleep();
         
     def verify_distance_poi_command(self, command):
-        rospy.loginfo("[VERIFY_DISTANCE_POI] going from state {} to GOING_TO_POI".format(self.state));
+        #rospy.loginfo("[VERIFY_DISTANCE_POI] going from state {} to GOING_TO_POI".format(self.state));
         current_distance = self.get_distance(self.current_position, self.poi_position);
         if ( current_distance > self.DISTANCE_ERROR):
+            rospy.loginfo("[VERIFY_DISTANCE_POI] distance from point {} ".format(current_distance));
             if( (self.last_point != None) and (self.last_point == self.current_position) ):
                 self.tries =  self.tries + 1;
+                rospy.loginfo("[VERIFY_DISTANCE_POI] tries {} ".format(self.tries));
                 if(self.tries == 3):
                     self.tries = 0;
                     self.sound_manager.play_let_me_pass();
