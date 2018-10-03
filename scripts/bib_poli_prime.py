@@ -79,12 +79,6 @@ class POIInfoManager:
         with open(self.filename) as fd:
             self.points = json.loads(fd.read());
             self.current = 0;
-            for point in self.points:
-                point['tried'] = False;
-
-    # returneaza numele punctului de interes parinte
-    def get_parent_poi_name(self):
-        return self.points[self.current]['parent_poi_name'];
 
     # returneanza numele punctului de interes curent
     def get_poi_name(self):
@@ -187,6 +181,8 @@ class ExperimentLogicManager:
         self.rate = rospy.Rate(10);
         self.events = [];
         self.tries = 0;
+        self.poi_name = None;
+        self.poi_position = None;
         rospack = rospkg.RosPack();
         self.path_prefix = rospack.get_path('experiment_package') + "/logs/";
         self.events_pub = rospy.Publisher(
@@ -211,6 +207,10 @@ class ExperimentLogicManager:
                         latch=True, queue_size=5);
         self.photos_pub = rospy.Publisher(
                     '/experiment/photos',
+                        std_msgs.msg.String,
+                        latch=True, queue_size=5);
+        self.look_after_pub = rospy.Publisher(
+                    '/bibpoli/lookup_cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
         rospy.sleep(3);
@@ -308,16 +308,13 @@ class ExperimentLogicManager:
         else:
             rospy.loginfo("[START_NEXT_POI] autonomus command");
         #setting the pois and their position
-        self.parent_poi_name = self.poi_info_manager.get_parent_poi_name();
         self.poi_name = self.poi_info_manager.get_poi_name();
-        self.parent_poi_position = self.poi_location_manager.get_position(self.parent_poi_name);
         self.poi_position = self.poi_location_manager.get_position(self.poi_name);
         rospy.loginfo("[START_NEXT_POI] Room: {}".format(self.poi_name));
-        rospy.loginfo("[START_NEXT_POI] Goint to {}".format(self.parent_poi_name));
         #publish event that is going to a new room
         to_publish = {};
         to_publish['event'] = {};
-        to_publish['event']['name'] = "SELECTING NEXT POINT {} WITH PARENT {}".format(self.poi_name, self.parent_poi_name);
+        to_publish['event']['name'] = "SELECTING NEXT POINT {}".format(self.poi_name);
         to_publish['event']['type'] = "GOTO_ROOM";
         to_publish['room'] = self.poi_name;
         to_publish['time'] = rospy.get_time();
@@ -330,6 +327,9 @@ class ExperimentLogicManager:
         web_msg.value = "/static/webapps/client/experiment/white.html";
         self.web_pub.publish(web_msg);
         self.rate.sleep();
+
+        if("ENSTA" in self.poi_name):
+            self.sound_manager.play_ensta();
 
         # GIVE THE cOMMAND FOR GOING
         next_command = {};
@@ -427,6 +427,36 @@ class ExperimentLogicManager:
             self.events.append(copy.deepcopy(to_publish));
             #self.sound_manager.play_initial();
     
+    def autonomous_do_experiment(self, command):
+        rospy.loginfo("[AUTONOMOUS_EXPERIMENT] going from state {} to EXPERIMENT".format(self.state));
+        self.state = "EXPERIMENT";
+        if("ENSTA" in self.poi_name):
+            rospy.loginfo("[MANUAL SPEAK INITIAL] ARRIVED AT ENSTA");
+        else:
+            #start looking after one person
+            self.look_after_pub.publish("START");
+            #wait for him to be centred by our robot
+            while True:
+                response = rospy.wait_for_message(
+                    '/bibpoli/lookup_rep',
+                    std_msgs.msg.String);
+                rospy.loginfo("[AUTONOMOUS_EXPERIMENT] getting from /bibpoli/lookup_rep:\n {}".format(response));
+                if (response.data == "CENTER"):
+                    break;
+            #say the message
+            self.sound_manager.play_initial();
+        #multiple computations
+        rospy.sleep(4);
+
+    def manual_do_experiment(self, command):
+        rospy.loginfo("[MANUAL_EXPERIMENT] going from state {} to EXPERIMENT".format(self.state));
+        self.state = "EXPERIMENT";
+        if("ENSTA" in self.poi_name):
+            rospy.loginfo("[MANUAL SPEAK INITIAL] ARRIVED AT ENSTA");
+        else:
+            self.sound_manager.play_initial();
+        #multiple computations
+        rospy.sleep(4);
 
     
     def do_manual_speak_inital(self, command):

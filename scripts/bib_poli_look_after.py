@@ -27,15 +27,20 @@ class LookUpLogicManager:
         self.cvBridge = cv_bridge.CvBridge();
         self.faceDectector = dlib.get_frontal_face_detector();
         self.state = "STOP";
-        self.centered = False;
         self.move_right = geometry_msgs.msg.Twist();
-        self.move_right.x = 0;
-        self.move_right.y = 0;
-        self.move_right.z = 0.4;
+        self.move_right.linear.x = 0;
+        self.move_right.linear.y = 0;
+        self.move_right.linear.z = 0;
+        self.move_right.angular.x = 0;
+        self.move_right.angular.y = 0;
+        self.move_right.angular.z = -0.3;
         self.move_left = geometry_msgs.msg.Twist();
-        self.move_left.x = 0;
-        self.move_left.y = 0;
-        self.move_left.z = -0.4;
+        self.move_right.linear.x = 0;
+        self.move_right.linear.y = 0;
+        self.move_right.linear.z = 0;
+        self.move_right.angular.x = 0;
+        self.move_right.angular.y = 0;
+        self.move_right.angular.z = 0.3;
         self.distance_limit = 30;
         rospy.sleep(3);
         rospy.Subscriber("xtion/rgb/image_rect_color", sensor_msgs.msg.Image, self.image_subscriber_callback);
@@ -83,11 +88,11 @@ class LookUpLogicManager:
                     else:
                         self.move_pub.publish(self.move_left);
                         self.rate.sleep();
+                    self.rep_pub.publish("NOCENTER");
+                    self.rate.sleep();
                 else:
-                    if(self.centered == False):
-                        self.centered == True;
-                        self.rep_pub.publish("CENTER");
-                        self.rate.sleep();
+                    self.rep_pub.publish("CENTER");
+                    self.rate.sleep();
             else:
                 self.move_pub.publish(self.move_right);
                 self.rate.sleep();

@@ -152,6 +152,7 @@ install(PROGRAMS
   scripts/bib_poli_key_teleop.py
   scripts/bib_poli_manual_interface.py
   scripts/bib_poli_poi_manager.py
+  scripts/bib_poli_poi_look_after.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
