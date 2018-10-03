@@ -17,7 +17,7 @@ class LookUpLogicManager:
     def __init__(self):
         self.rate = rospy.Rate(10);
         self.move_pub = rospy.Publisher(
-                    '/mobile_base_controller/facesdetected',
+                    '/mobile_base_controller/cmd_vel',
                         geometry_msgs.msg.Twist,
                         latch=True, queue_size=5);
         self.rep_pub = rospy.Publisher(
@@ -35,13 +35,20 @@ class LookUpLogicManager:
         self.move_right.angular.y = 0;
         self.move_right.angular.z = -0.3;
         self.move_left = geometry_msgs.msg.Twist();
-        self.move_right.linear.x = 0;
-        self.move_right.linear.y = 0;
-        self.move_right.linear.z = 0;
-        self.move_right.angular.x = 0;
-        self.move_right.angular.y = 0;
-        self.move_right.angular.z = 0.3;
-        self.distance_limit = 30;
+        self.move_left.linear.x = 0;
+        self.move_left.linear.y = 0;
+        self.move_left.linear.z = 0;
+        self.move_left.angular.x = 0;
+        self.move_left.angular.y = 0;
+        self.move_left.angular.z = 0.3;
+        self.move_stop = geometry_msgs.msg.Twist();
+        self.move_stop.linear.x = 0;
+        self.move_stop.linear.y = 0;
+        self.move_stop.linear.z = 0;
+        self.move_stop.angular.x = 0;
+        self.move_stop.angular.y = 0;
+        self.move_stop.angular.z = 0;
+        self.distance_limit = 100;
         rospy.sleep(3);
         rospy.Subscriber("xtion/rgb/image_rect_color", sensor_msgs.msg.Image, self.image_subscriber_callback);
         rospy.Subscriber("bibpoli/lookup_cmd", std_msgs.msg.String, self.command_subscriber);
@@ -71,8 +78,9 @@ class LookUpLogicManager:
             frame = self.cvBridge.imgmsg_to_cv2(reply, 'bgr8');
             faces_detected = self.faceDectector(frame, 1);
             rospy.loginfo("[image_subscriber_callback] people detected {}".format(len(faces_detected)));
-            centerX = frame.width / 2;
-            centerY = frame.height / 2;
+            height, width, channels = frame.shape;
+            centerX = width / 2;
+            centerY = height / 2;
             min_index = -1;
             min_value = 999999;
             for (i, rect) in enumerate(faces_detected):
@@ -80,8 +88,10 @@ class LookUpLogicManager:
                 if (current_distance <  min_value):
                     min_index = i;
                     min_value = current_distance;
-            if(min_index == -1):
+            if(min_index != -1):
+                rospy.loginfo("min_index {}, min_value {}".format(min_index, min_value));
                 if (min_value > self.distance_limit):
+                    rospy.loginfo("is moving");
                     if ( ((faces_detected[min_index].left() + faces_detected[min_index].right())/2) > centerX ):
                         self.move_pub.publish(self.move_right);
                         self.rate.sleep();
@@ -91,6 +101,8 @@ class LookUpLogicManager:
                     self.rep_pub.publish("NOCENTER");
                     self.rate.sleep();
                 else:
+                    self.move_pub.publish(self.move_stop);
+                    self.rate.sleep();
                     self.rep_pub.publish("CENTER");
                     self.rate.sleep();
             else:
