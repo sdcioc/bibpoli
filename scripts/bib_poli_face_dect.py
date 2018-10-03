@@ -20,9 +20,9 @@ class FaceDetecttorLogicManager:
                         latch=True, queue_size=5);
         self.cvBridge = cv_bridge.CvBridge();
         self.faceDectector = dlib.get_frontal_face_detector();
-        rospy.sleep(3);
-        rospy.Subscriber("xtion/rgb/image_rect_color", sensor_msgs.msg.Image, self.image_subscriber_callback);
-        rospy.sleep(3);
+        #rospy.sleep(3);
+        #rospy.Subscriber("xtion/rgb/image_rect_color", sensor_msgs.msg.Image, self.image_subscriber_callback);
+        #rospy.sleep(3);
         ## face_detec
 
 #    def rect_to_bb(self, rect):
@@ -61,6 +61,8 @@ class FaceDetecttorLogicManager:
         frame = self.cvBridge.imgmsg_to_cv2(reply, 'bgr8');
         faces_detected = self.faceDectector(frame, 1);
         rospy.loginfo("[check_number_people] people detected {}".format(len(faces_detected)));
+        rospy.loginfo("faces detected \n{}".format(faces_detected));
+        rospy.loginfo("frame \n{}".format(frame));
         return len(faces_detected);
 
 if __name__ == '__main__':
@@ -71,8 +73,8 @@ if __name__ == '__main__':
         my_logic_manager = FaceDetecttorLogicManager();
         while(True):
             n = my_logic_manager.check_number_people();
-            #rospy.sleep(3);
-            if(n == -1):
+            command_number = int(raw_input("Enter your command:\n"));
+            if(command_number == -1):
                 break;
         #my_logic_manager = FaceDetecttorLogicManager();
         #rospy.spin();
