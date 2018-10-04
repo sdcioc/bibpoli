@@ -25,15 +25,11 @@ function init() {
         serverName: '/motv_identification_manager/nav_to_pose'
     });
 
-    user_arrow = new ROS2D.NavigationArrow({
-        size: 1.0,
-        strokeColor: createjs.Graphics.getRGB(0, 0, 255, 0.5) 
-    });
-    user_arrow.scaleX = 0.1;
-    user_arrow.scaleY = 0.1;
-    viewer.addObject(user_arrow);
+    
 
 
+    var enstaText = new createjs.Text("ENSTA STAND", "20px Arial", "#ff7700");
+    enstaText.textBaseline = "alphabetic";
     ensta_arrow = new ROS2D.NavigationArrow({
         size: 1.0,
         strokeColor: createjs.Graphics.getRGB(0, 0, 255, 0.5) 
@@ -41,6 +37,7 @@ function init() {
     ensta_arrow.scaleX = 0.1;
     ensta_arrow.scaleY = 0.1;
     viewer.addObject(ensta_arrow);
+    viewer.addObject(enstaText);
 
     ensta_pose_param = new ROSLIB.Param({
         ros: ros,
@@ -52,18 +49,24 @@ function init() {
         ensta_arrow.x = ensta_position.pose.position.x;
         ensta_arrow.y = -ensta_position.pose.position.y;
         ensta_arrow.visible = true;
+        enstaText.x = ensta_position.pose.position.x + 2;
+        enstaText.y = -ensta_position.pose.position.y;
+        enstaText.visible = true;
+        var g = new createjs.Graphics();
+        g.setStrokeStyle(1);
+        g.beginStroke(createjs.Graphics.getRGB(0,0,0));
+        g.beginFill(createjs.Graphics.getRGB(255,0,0));
+        g.drawCircle(0,0,3);
+    
+        var s = new createjs.Shape(g);
+        s.x = ensta_position.pose.position.x;
+        s.y = -ensta_position.pose.position.y;
+    
+        viewer.addObject(s);
     });
     
 
-    var user_pose = new ROSLIB.Topic({
-        ros:            ros,
-        name:           '/interact_pose',
-        messageType:    'geometry_msgs/PoseStamped'
-    });
-    user_pose.subscribe(function(msg) {
-        update_user_pose(msg);
-    });
-
+    
     
     pub_web_goto = new ROSLIB.Topic({
         ros:            ros,
@@ -71,10 +74,37 @@ function init() {
         messageType:    'pal_web_msgs/WebGoTo'
     });
 
-    // Ticker used to check on things such as user pose status.
-    createjs.Ticker.addEventListener("tick", ticker_cb);
+    
 
 }
+
+/*țvar that = this;
+  options = options || {};
+  var size = options.size || 10;
+  var strokeSize = options.strokeSize || 3;
+  var strokeColor = options.strokeColor || createjs.Graphics.getRGB(0, 0, 0);
+  var fillColor = options.fillColor || createjs.Graphics.getRGB(255, 0, 0);
+  var pulse = options.pulse;
+  // draw the arrow
+  var graphics = new createjs.Graphics();
+  // line width
+  graphics.setStrokeStyle(strokeSize);
+  graphics.moveTo(-size / 2.0, -size / 2.0);
+  graphics.beginStroke(strokeColor);
+  graphics.beginFill(fillColor);
+  graphics.lineTo(size, 0);
+  graphics.lineTo(-size / 2.0, size / 2.0);
+  graphics.closePath();
+  graphics.endFill();
+  graphics.endStroke();
+  // create the shape
+  createjs.Shape.call(this, graphics);ț
+
+  create object
+   var text = new createjs.Text("Hello World", "20px Arial", "#ff7700");
+text.x = 100;
+text.textBaseline = "alphabetic";
+*/
 
 function convert_POIPosition_MapPosition(position)
 {
@@ -87,57 +117,4 @@ function convert_POIPosition_MapPosition(position)
 	pos.pose.orientation.z = Math.sin(position[2] / 2.0);
     pos.pose.orientation.w = Math.cos(position[2] / 2.0);
     return pos;
-}
-
-
-
-function update_user_pose(msg)
-{
-    user_arrow.x = msg.pose.position.x;
-    user_arrow.y = -msg.pose.position.y;
-    // Note: If this callback is called, it means we're in the correct state
-    // (PI, FR or FP).
-    user_arrow.visible = true;
-    last_user_arrow = new Date();
-}
-
-
-
-function go_reach() {
-    var loc_e    = document.getElementById("reach_select")
-    var loc_name = loc_e.options[loc_e.selectedIndex].value    
-
-    var req = new ROSLIB.ServiceRequest({
-        locations:  [loc_name],
-        confidence: [1.0]
-    })
-
-    scl_reach.callService(req, function(result) {
-        console.log("Person status: " + result.status);
-    });
-}
-
-
-function ticker_cb(event)
-{
-    var now = new Date();
-    user_elapsed = (now - last_user_arrow) / 1000; // In sec.
-
-    // NOTE: No need to check the state of IDManager, as messages are not
-    // produced outside of the PI, FR, and FP states for this topic.
-    if (user_elapsed > 1) {
-        user_arrow.visible = false;
-    }
-
-}
-
-function reset_gui() {
-    pub_web_goto.publish({
-        type: 3,
-        value: "/static/webapps/client/index.html"
-    })
-}
-
-function stop_all() {
-    pub_stop.publish({})
 }
