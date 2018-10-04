@@ -15,6 +15,12 @@
         </node>
 
         <!--
+        LOAD the http server
+        -->
+        <node pkg="bib_poli_package" name="bib_poli_install_http" type="bib_poli_install_http.sh">
+        </node>
+
+        <!--
         LOAD bib_poli_node
         -->
         <node pkg="bib_poli_package" name="bib_poli_node" type="bib_poli_prime.py" output="screen">

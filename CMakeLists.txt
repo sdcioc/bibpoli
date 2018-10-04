@@ -153,6 +153,7 @@ install(PROGRAMS
   scripts/bib_poli_manual_interface.py
   scripts/bib_poli_poi_manager.py
   scripts/bib_poli_look_after.py
+  scripts/bib_poli_install_http.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

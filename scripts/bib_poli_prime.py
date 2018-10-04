@@ -103,64 +103,69 @@ class SoundManager:
         rospy.set_param(self.general_volume_param, 80);
         rospy.set_param(self.playback_volume_param, 80);
         rospack = rospkg.RosPack();
-        self.prefix = rospack.get_path('experiment_package') + "/config/sounds/";
+        self.prefix = rospack.get_path('bib_poli_package') + "/config/sounds/";
     
-    def play_first(self, guessed_type):
+    def play_introduction(self, message_type, speed):
         command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_first_";
-        if(guessed_type == 1):
-            command = command + "promotion.wav";
+        if(message_type == 0):
+            command = command + "1";
         else:
-            command = command + "prevention.wav";
-        subprocess.check_output(command.split());
-
-    def play_second(self, guessed_type):
-        command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_second_";
-        if(guessed_type == 1):
-            command = command + "promotion.wav";
+            command = command + "2";
+        if(speed == 1):
+            command = command + "m.wav";
         else:
-            command = command + "prevention.wav";
+            command = command + "wav";
         subprocess.check_output(command.split());
 
-    def play_final(self, guessed_type):
+
+    def play_ensta_description(self, message_type, speed):
         command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_final_";
-        if(guessed_type == 1):
-            command = command + "promotion.wav";
+        if(message_type == 0):
+            command = command + "3";
+        elif(message_type == 1):
+            command = command + "4";
         else:
-            command = command + "prevention.wav";
-        subprocess.check_output(command.split());
-
-    def play_exit(self, guessed_type):
-        command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_exit_";
-        if(guessed_type == 1):
-            command = command + "promotion.wav";
+            command = command + "5";
+        if(speed == 1):
+            command = command + "m.wav";
         else:
-            command = command + "prevention.wav";
+            command = command + "wav";
+        subprocess.check_output(command.split());
+    
+    def play_road_to_ensta(self, message_type, speed):
+        command = self.utility + self.prefix;
+        if(message_type == 0):
+            command = command + "6";
+        else:
+            command = command + "7";
+        if(speed == 1):
+            command = command + "m.wav";
+        else:
+            command = command + "wav";
+        subprocess.check_output(command.split());
+    
+    def play_thank_you(self, speed):
+        command = self.utility + self.prefix;
+        command = command + "11";
+        if(speed == 1):
+            command = command + "m.wav";
+        else:
+            command = command + "wav";
         subprocess.check_output(command.split());
 
-    def play_initial(self):
-        command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_initial.wav";
-        subprocess.check_output(command.split());
 
-    def play_many(self):
+    def play_let_me_pass(self, message_type, speed):
         command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_many.wav";
-        subprocess.check_output(command.split());
-
-    def play_let_me_pass(self):
-        command = self.utility + self.prefix;
-        language = rospy.get_param("/user_lang")[0:2];
-        command = command + language + "_many.wav";
+        if(message_type == 0):
+            command = command + "8";
+        elif(message_type == 1):
+            command = command + "9";
+        else:
+            command = command + "10";
+        if(speed == 1):
+            command = command + "m.wav";
+        else:
+            command = command + "wav";
         subprocess.check_output(command.split());
     
 
@@ -171,7 +176,6 @@ class ExperimentLogicManager:
         self.poi_location_manager = POILocationManager();
         self.sound_manager = SoundManager();
         self.state = "INITIAL";
-        self.guessed_type = 0;
         self.DISTANCE_ERROR = 0.6;
         self.sonar_param = "/speed_limit/limitess/base_sonars/obstacle_max/dist";
         self.laser_param = "/speed_limit/limitess/base_laser/obstacle_max/dist";
@@ -179,22 +183,11 @@ class ExperimentLogicManager:
         self.obstacle_door_dist = 0.05;
         self.people_number = 0;
         self.rate = rospy.Rate(10);
-        self.events = [];
         self.tries = 0;
         self.poi_name = None;
         self.poi_position = None;
-        rospack = rospkg.RosPack();
-        self.path_prefix = rospack.get_path('experiment_package') + "/logs/";
-        self.events_pub = rospy.Publisher(
-                    '/experiment/events',
-                        std_msgs.msg.String,
-                        latch=True, queue_size=5);
-        self.path_pub = rospy.Publisher(
-                    '/experiment/path',
-                        std_msgs.msg.String,
-                        latch=True, queue_size=5);
         self.command_pub = rospy.Publisher(
-                    '/experiment/cmd',
+                    '/bibpoli/cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
         self.move_pub = rospy.Publisher(
@@ -205,16 +198,12 @@ class ExperimentLogicManager:
                     '/web/go_to',
                         pal_web_msgs.msg.WebGoTo,
                         latch=True, queue_size=5);
-        self.photos_pub = rospy.Publisher(
-                    '/experiment/photos',
-                        std_msgs.msg.String,
-                        latch=True, queue_size=5);
         self.look_after_pub = rospy.Publisher(
                     '/bibpoli/lookup_cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
         rospy.sleep(3);
-        rospy.Subscriber("experiment/cmd", std_msgs.msg.String, self.command_subscriber_callback);
+        rospy.Subscriber("bibpoli/cmd", std_msgs.msg.String, self.command_subscriber_callback);
         rospy.Subscriber("amcl_pose", geometry_msgs.msg.PoseWithCovarianceStamped, self.position_subscriber_callback);
         rospy.sleep(3);
         ## face_detec
@@ -266,20 +255,6 @@ class ExperimentLogicManager:
     def position_subscriber_callback(self, reply):
         #print "[POSITION] {}".format(reply.pose.pose);
         self.current_position = reply.pose.pose;
-        to_publish = {};
-        to_publish['pose'] = {};
-        to_publish['pose']['position'] = {};
-        to_publish['pose']['position']['x'] = self.current_position.position.x;
-        to_publish['pose']['position']['y'] = self.current_position.position.y;
-        to_publish['pose']['position']['z'] = self.current_position.position.z;
-        to_publish['pose']['orientation'] = {};
-        to_publish['pose']['orientation']['x'] = self.current_position.orientation.x;
-        to_publish['pose']['orientation']['y'] = self.current_position.orientation.y;
-        to_publish['pose']['orientation']['z'] = self.current_position.orientation.z;
-        to_publish['pose']['orientation']['w'] = self.current_position.orientation.w;
-        to_publish['time'] = rospy.get_time();
-        self.path_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
 
     #force manual to a poi without autonomous continuity
     def force_poi_command(self, command):
@@ -293,6 +268,7 @@ class ExperimentLogicManager:
         rospy.loginfo("[NEXT_POI] going from state {} to GETTING_NEXT_POI".format(self.state));
         self.state = "GETTING_NEXT_POI"
         next_command = {}
+        next_command['type'] = "START_NEXT_POI";
         self.poi_info_manager.next_poi();
         self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();
@@ -311,16 +287,7 @@ class ExperimentLogicManager:
         self.poi_name = self.poi_info_manager.get_poi_name();
         self.poi_position = self.poi_location_manager.get_position(self.poi_name);
         rospy.loginfo("[START_NEXT_POI] Room: {}".format(self.poi_name));
-        #publish event that is going to a new room
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "SELECTING NEXT POINT {}".format(self.poi_name);
-        to_publish['event']['type'] = "GOTO_ROOM";
-        to_publish['room'] = self.poi_name;
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
-        self.events.append(copy.deepcopy(to_publish));
+        
         # make the screen white
         web_msg = pal_web_msgs.msg.WebGoTo();
         web_msg.type = 3;
@@ -329,12 +296,12 @@ class ExperimentLogicManager:
         self.rate.sleep();
 
         if("ENSTA" in self.poi_name):
-            self.sound_manager.play_ensta();
+            #self.sound_manager.play_ensta();
+            rospy.loginfo("ENSTA");
 
         # GIVE THE cOMMAND FOR GOING
         next_command = {};
         next_command['type'] = "GOTO_POI";
-        rospy.sleep(1);
         rospy.loginfo("[START_NEXT_POI] publish next command");
         self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();
@@ -344,15 +311,6 @@ class ExperimentLogicManager:
         rospy.loginfo("[FINISH_EXPERIMENT] BIG EXPERIMENT FINISHED ALL DOORS VISITED OR TRIED");
         rospy.loginfo("[FINISH_EXPERIMENT] going from state {} to EXPERIMENT_FINISHED".format(self.state));
         self.state = "EXPERIMENT_FINISHED";
-        #publish the event
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "FINSIH EXPERIMENT";
-        to_publish['event']['type'] = "EXPERIMENT_FINISHED";
-        to_publish['room'] = "NOROOM";
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
 
 
 
@@ -377,10 +335,15 @@ class ExperimentLogicManager:
                 rospy.loginfo("[VERIFY_DISTANCE_POI] tries {} ".format(self.tries));
                 if(self.tries == 3):
                     self.tries = 0;
-                    self.sound_manager.play_let_me_pass();
+                    speed = random.randint(0,1);
+                    message_type = random.randint(0,1);
+                    self.sound_manager.play_let_me_pass(message_type, speed);
+                    rospy.sleep(2);
+                    self.sound_manager.play_thank_you(speed);
+                    
                 rospy.sleep(1);
                 self.clear_costmaps();
-                rospy.sleep(2);
+                rospy.sleep(1);
                 self.move_pub.publish(self.poi_position);
                 self.rate.sleep();
             else:
@@ -395,37 +358,17 @@ class ExperimentLogicManager:
         else:
             rospy.loginfo("[VERIFY_DISTANCE_POI] going from state {} to ARRIVED_POI".format(self.state));
             self.state = "ARRIVED_POI"
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "ARRIVED POINT {}".format(self.poi_name);
-            to_publish['event']['type'] = "ARRIVED_ROOM";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
-            self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            #rospy.set_param(self.sonar_param, self.obstacle_normal_dist);
-            #rospy.set_param(self.laser_param, self.obstacle_normal_dist);
+            
             rospy.loginfo("[VERIFY_DISTANCE_POI] ARRIVED POI- WAITING CHECK PEOPLE");
-            #START MAKING PHOTOS
-            msg = {};
-            msg['type'] = "START";
-            msg['room'] = self.poi_name;
-            self.photos_pub.publish(json.dumps(msg));
-            self.rate.sleep();
-            #usually in checning
+
+
             rospy.loginfo("[MANUAL_CHECK_PEOPLE] going from state {} to CHECKING_PEOPLE".format(self.state));
             self.state = "CHECKING_PEOPLE"
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "START CHECKING PEOPLE POINT {}".format(self.parent_poi_name);
-            to_publish['event']['type'] = "CHECK_PEOPLE";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
+
+            next_command = {}
+            next_command['type'] = "AUTONOMOUS_EXPERIMENT";
+            self.command_pub.publish(json.dumps(next_command));
             self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            #self.sound_manager.play_initial();
     
     def autonomous_do_experiment(self, command):
         rospy.loginfo("[AUTONOMOUS_EXPERIMENT] going from state {} to EXPERIMENT".format(self.state));
@@ -444,7 +387,27 @@ class ExperimentLogicManager:
                 if (response.data == "CENTER"):
                     break;
             #say the message
-            self.sound_manager.play_initial();
+            speed = random.randint(0,1);
+            message_type = random.randint(0,1);
+            self.sound_manager.play_introduction(message_type, speed);
+            rospy.sleep(1);
+            message_type = random.randint(0,2);
+            self.sound_manager.play_ensta_description(message_type, speed);
+            rospy.sleep(1);
+            message_type = random.randint(0,1);
+            self.sound_manager.play_road_to_ensta(message_type, speed);
+            web_msg = pal_web_msgs.msg.WebGoTo();
+            web_msg.type = 3;
+            web_msg.value = "/static/webapps/client/bibpoli/index.html";
+            self.web_pub.publish(web_msg);
+            self.rate.sleep();
+            rospy.sleep(7);
+            self.sound_manager.play_thank_you(speed);
+            rospy.sleep(2);
+            next_command = {}
+            next_command['type'] = "NEXT_POI";
+            self.command_pub.publish(json.dumps(next_command));
+            self.rate.sleep();
         #multiple computations
         rospy.sleep(4);
 
@@ -452,233 +415,31 @@ class ExperimentLogicManager:
         rospy.loginfo("[MANUAL_EXPERIMENT] going from state {} to EXPERIMENT".format(self.state));
         self.state = "EXPERIMENT";
         if("ENSTA" in self.poi_name):
-            rospy.loginfo("[MANUAL SPEAK INITIAL] ARRIVED AT ENSTA");
+            rospy.loginfo("[MANUAL_EXPERIMENT] ARRIVED AT ENSTA");
         else:
-            self.sound_manager.play_initial();
+            speed = command['speed'];
+            message_type = command['introduction_type'];
+            self.sound_manager.play_introduction(message_type, speed);
+            rospy.sleep(1);
+            message_type = command['description_type'];
+            self.sound_manager.play_ensta_description(message_type, speed);
+            rospy.sleep(1);
+            message_type = command['road_type'];
+            self.sound_manager.play_road_to_ensta(message_type, speed);
+            web_msg = pal_web_msgs.msg.WebGoTo();
+            web_msg.type = 3;
+            web_msg.value = "/static/webapps/client/bibpoli/index.html";
+            self.web_pub.publish(web_msg);
+            self.rate.sleep();
+            rospy.sleep(7);
+            self.sound_manager.play_thank_you(speed);
+            rospy.sleep(2);
         #multiple computations
         rospy.sleep(4);
-
-    
-    def do_manual_speak_inital(self, command):
-        rospy.loginfo("[MANUAL SPEAK INITIAL] going from state {} to MANY_PEOPLE".format(self.state));
-        #play the message to mcuh people
-        self.sound_manager.play_initial();
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "EXPERIMENT FINISHED INTIAL SOUND {}".format(self.poi_name);
-        to_publish['event']['guessed_type'] = self.guessed_type;
-        to_publish['event']['type'] = "INITIAL_SOUND";
-        to_publish['room'] = self.poi_name;
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
-        self.events.append(copy.deepcopy(to_publish));
-
-    def do_manual_speak_to_many(self, command):
-        rospy.loginfo("[MANUAL SPEAK] going from state {} to MANY_PEOPLE".format(self.state));
-        #play the message to mcuh people
-        self.sound_manager.play_many();
-
-    def do_manual_first_experiment_first_command(self, command):
-        rospy.loginfo("[DO_EXPERIMENT_MANUAL_FIRST] going from state {} to DOING_EXPERIMENT".format(self.state));
-        self.state = "DOING_EXPERIMENT"
-        self.guessed_type = random.randint(0,1);
-        if(self.guessed_type == 1):
-            rospy.set_param('/experiment_package/experiment/speed', 0.6);
-        else:
-            rospy.set_param('/experiment_package/experiment/speed', 0.2);
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "EXPERIMENT STARTED {}".format(self.poi_name);
-        to_publish['event']['guessed_type'] = self.guessed_type;
-        to_publish['event']['type'] = "START_EXPERIMENT";
-        to_publish['room'] = self.poi_name;
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
-        self.events.append(copy.deepcopy(to_publish));
-        rospy.loginfo("[DO_EXPERIMENT_MANUAL]  WAITNING FOR SECOND PART");
-
-
-    def do_manual_second_experiment_command(self, command):
-        #TODO: look after first person
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "EXPERIMENT STRTED LOOK UP {}".format(self.poi_name);
-        to_publish['event']['guessed_type'] = self.guessed_type;
-        to_publish['event']['type'] = "SPEAKING_FIRST";
-        to_publish['room'] = self.poi_name;
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
-        self.events.append(copy.deepcopy(to_publish));
-        self.sound_manager.play_first(self.guessed_type);
-        self.state = "EXPERIMENT_WAITING_FIRST";
-        to_publish = {};
-        to_publish['event'] = {};
-        to_publish['event']['name'] = "EXPERIMENT FINISHED FIRST SOUND {}".format(self.poi_name);
-        to_publish['event']['guessed_type'] = self.guessed_type;
-        to_publish['event']['type'] = "WAITING_FIRST_RESPONSE";
-        to_publish['room'] = self.poi_name;
-        to_publish['time'] = rospy.get_time();
-        self.events_pub.publish(json.dumps(to_publish));
-        self.rate.sleep();
-        self.events.append(copy.deepcopy(to_publish));
-        #show the questions lansare index
-        web_msg = pal_web_msgs.msg.WebGoTo();
-        web_msg.type = 3;
-        web_msg.value = "/static/webapps/client/experiment/index.html";
-        self.web_pub.publish(web_msg);
-        self.rate.sleep();
-        try:
-            #waiting to press start
-            while True:
-                reply = rospy.wait_for_message(
-                '/experiment/web/cmd',
-                std_msgs.msg.String, 30);
-                rospy.loginfo("[INFO][EXPERIMENT_FIRST] gettin {}".format(reply));
-                if (reply.data == "pressStart"):
-                    break;
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "EXPERIMENT RESPONDED FIRST {}".format(self.poi_name);
-            to_publish['event']['guessed_type'] = self.guessed_type;
-            to_publish['event']['type'] = "WAITING_STOP";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
-            self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            rospy.loginfo("[INFO][SECOND_EXPERIMENT] WAITING COMPLETION");
-
-            #waitning gor finish
-            while True:
-                finish = rospy.wait_for_message(
-                '/experiment/web/cmd',
-                std_msgs.msg.String);
-                rospy.loginfo("[INFO][FINISH_FIRST] gettin {}".format(finish));
-                if (finish.data == "pressQuit"):
-                    break;
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "EXPERIMENT FINISHED FIRST {}".format(self.poi_name);
-            to_publish['event']['guessed_type'] = self.guessed_type;
-            to_publish['event']['type'] = "EXPERIMENT_FINISHED";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
-            self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            #play final sound
-            self.sound_manager.play_final(self.guessed_type);
-        except rospy.exceptions.ROSException:
-            rospy.loginfo("[INFO][DO_EXPERIMENT] No starrting the questions first");
-            #TODO:move foward
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "EXPERIMENT SECOND TRY {}".format(self.poi_name);
-            to_publish['event']['guessed_type'] = self.guessed_type;
-            to_publish['event']['type'] = "SPEAKING_SECOND";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
-            self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            #play second message
-            self.sound_manager.play_second(self.guessed_type);
-            to_publish = {};
-            to_publish['event'] = {};
-            to_publish['event']['name'] = "EXPERIMENT SECOND {}".format(self.poi_name);
-            to_publish['event']['guessed_type'] = self.guessed_type;
-            to_publish['event']['type'] = "WAITING_SECOND_RESPONSE";
-            to_publish['room'] = self.poi_name;
-            to_publish['time'] = rospy.get_time();
-            self.events_pub.publish(json.dumps(to_publish));
-            self.rate.sleep();
-            self.events.append(copy.deepcopy(to_publish));
-            try:
-                #wait again for response
-                while True:
-                    reply = rospy.wait_for_message(
-                    '/experiment/web/cmd',
-                    std_msgs.msg.String, 15);
-                    rospy.loginfo("[INFO][EXPERIMENT_SECOND] gettin {}".format(reply));
-                    if (reply.data == "pressStart"):
-                        break;
-                to_publish = {};
-                to_publish['event'] = {};
-                to_publish['event']['name'] = "EXPERIMENT RESPONDED SECOND {}".format(self.poi_name);
-                to_publish['event']['guessed_type'] = self.guessed_type;
-                to_publish['event']['type'] = "WAITING_STOP";
-                to_publish['room'] = self.poi_name;
-                to_publish['time'] = rospy.get_time();
-                self.events_pub.publish(json.dumps(to_publish));
-                self.rate.sleep();
-                self.events.append(copy.deepcopy(to_publish));
-                #wait to finish
-                while True:
-                    finish = rospy.wait_for_message(
-                    '/experiment/web/cmd',
-                    std_msgs.msg.String);
-                    rospy.loginfo("[INFO][FINISH_SECOND] gettin {}".format(finish));
-                    if (finish.data == "pressQuit"):
-                        break;
-                to_publish = {};
-                to_publish['event'] = {};
-                to_publish['event']['name'] = "EXPERIMENT FINIHED SECOND {}".format(self.poi_name);
-                to_publish['event']['guessed_type'] = self.guessed_type;
-                to_publish['event']['type'] = "EXPERIMENT_FINISHED";
-                to_publish['room'] = self.poi_name;
-                to_publish['time'] = rospy.get_time();
-                self.events_pub.publish(json.dumps(to_publish));
-                self.rate.sleep();
-                self.events.append(copy.deepcopy(to_publish));
-                #play final sound
-                self.sound_manager.play_final(self.guessed_type);
-            except rospy.exceptions.ROSException:
-                #if he does not start the questionaire
-                rospy.loginfo("[INFO][DO_EXPERIMENT] No starrting the questions second");
-                to_publish = {};
-                to_publish['event'] = {};
-                to_publish['event']['name'] = "EXPERIMENT NOT RESPONDED {}".format(self.poi_name);
-                to_publish['event']['guessed_type'] = self.guessed_type;
-                to_publish['event']['type'] = "EXPERIMENT_REFUSED";
-                to_publish['room'] = self.poi_name;
-                to_publish['time'] = rospy.get_time();
-                self.events_pub.publish(json.dumps(to_publish));
-                self.rate.sleep();
-                self.events.append(copy.deepcopy(to_publish));
-                #play final sound
-                self.sound_manager.play_final(self.guessed_type);
-        web_msg = pal_web_msgs.msg.WebGoTo();
-        web_msg.type = 3;
-        web_msg.value = "/static/webapps/client/experiment/white.html";
-        self.web_pub.publish(web_msg);
-        self.rate.sleep();
 
     def stop_command(self, command):
         rospy.loginfo("[STOP] going from state {} to STOP".format(self.state));
         self.state = "STOP";
-    
-
-    def get_current_position(self):
-        try:
-            reply = rospy.wait_for_message(
-            '/amcl_pose',
-            geometry_msgs.msg.PoseWithCovarianceStamped, 3)
-        except rospy.exceptions.ROSException:
-            rospy.loginfo("[ERROR] No Info from amcl_pose trying slam_karto");
-            try:
-                reply = rospy.wait_for_message(
-                '/slam_karto_pose',
-                geometry_msgs.msg.PoseWithCovarianceStamped, 3)
-            except rospy.exceptions.ROSException:
-                rospy.loginfo("[ERROR] No Info from slam_karto");
-                return None
-        if(reply.header.frame_id == 'map'):
-            rospy.loginfo("[ERROR] Info from another map");
-            return None
-        return reply.pose.pose
 
     def get_distance(self, point1, point2):
         x1 = point1.position.x;
