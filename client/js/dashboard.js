@@ -12,11 +12,17 @@ function init() {
     ros = new ROSLIB.Ros({url: 'ws://' + window.location.hostname + ':9090'});
 
     init_hbba();
-    
+    var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+
     viewer = new ROS2D.Viewer({
         divID: 'nav',
-        width: 1024,
-        height: 860
+        width: x,
+        height: y
     });
 
     var nav = NAV2D.OccupancyGridClientNav({
@@ -74,6 +80,7 @@ function init() {
         name: '/mmap/poi/submap_0/ensta'
     });
   
+
     ensta_pose_param.get(function(value){
         ensta_position = convert_POIPosition_MapPosition(value);
         ensta_arrow.x = ensta_position.pose.position.x;
