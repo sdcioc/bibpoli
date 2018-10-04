@@ -6,6 +6,7 @@ var viewer;
 var user_arrow;
 var ensta_arrow;
 var last_user_arrow = new Date(); // Time of last valid reception.
+var robot_pose;
 
 function init() {
     ros = new ROSLIB.Ros({url: 'ws://' + window.location.hostname + ':9090'});
@@ -38,11 +39,33 @@ function init() {
     ensta_arrow.scaleY = 0.1;
 
 
-    ensta_image = new ROS2D.NavigationArrow({
-        size: 10.0,
-        image: './img/ensta,png' 
+    glonalPlannerService = new ROSLIB.Service({
+        ros:            ros,
+        name:           '/move_base/GlobalPlanner/make_plan',
+        serviceType:    'nav_msgs/GetPlan'
     });
 
+    var pose_topic = new ROSLIB.Topic({
+        ros:            ros,
+        name:           '/robot_pose_web',
+        messageType:    'geometry_msgs/Pose'
+    });
+    pose_topic.subscribe(function(msg) {
+        robot_pose = msg;
+    });
+
+
+
+
+    ensta_image = new ROS2D.NavigationImage({
+        size: 10.0,
+        image: './img/ensta.png' 
+    });
+
+
+    ensta_path = new ROS2D.TraceShape({
+        maxPoses: 0
+    });
 
     viewer.addObject(ensta_arrow);
 
@@ -75,6 +98,37 @@ function init() {
         s.y = -ensta_position.pose.position.y;
     
         viewer.addObject(s);
+        var positionVec3 = new ROSLIB.Vector3(ensta_position.pose.position.x, ensta_position.pose.position.y, 0);
+        var orientation = new ROSLIB.Quaternion({x:0, y:0, z:0, w:ensta_position.pose.orientation.w});
+        var ensta_pose = new ROSLIB.Pose({
+            'position' : positionVec3,
+            'orientation' : orientation
+        });
+
+        var req = new ROSLIB.ServiceRequest({
+            start:  {
+                header : {
+                  frame_id : '/map'
+                },
+                pose : robot_pose
+              },
+            goal: {
+                header : {
+                  frame_id : '/map'
+                },
+                pose : ensta_pose
+              }
+        })
+    
+        glonalPlannerService.callService(req, function(result) {
+            console.log("result from service status: " )
+            console.log(result);
+            for (var x in result.poses) {
+                console.log(x);
+                ensta_path.addPose(x.pose);
+            }
+            viewer.addObject(ensta_path);
+        });
     });
     
 
