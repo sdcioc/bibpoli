@@ -54,7 +54,7 @@ class LookUpLogicManager:
         self.time = 2;
         rospy.sleep(3);
         rospy.Subscriber("xtion/rgb/image_rect_color", sensor_msgs.msg.Image, self.image_subscriber_callback_2);
-        rospy.Subscriber("bibpoli/lookup_cmd", std_msgs.msg.String, self.command_subscriber);
+        rospy.Subscriber("bibpoli/lookup/cmd", std_msgs.msg.String, self.command_subscriber);
 
 
 #    def rect_to_bb(self, rect):

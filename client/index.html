@@ -3,22 +3,46 @@
 <head>
 <meta charset="utf-8">
 
-<link rel="stylesheet" href="./css/bootstrap.min.css"></link>
 
+<!--
+    surse externe
+-->
+<link rel="stylesheet" href="./css/bootstrap.min.css"></link>
 <script type="text/javascript" src="./js/easeljs.min.js"></script>
 <script type="text/javascript" src="./js/eventemitter2.min.js"></script>
 <script type="text/javascript" src="./js/roslib.min.js"></script>
+<!--
+   am adaugat pentru view functia removeObject ca sa pot sterge path-ul 
+-->
 <script type="text/javascript" src="./js/ros2d.min.js"></script>
 <script type="text/javascript" src="./js/nav2d.js"></script>
 <script type="text/javascript" src="./js/jquery.min.js"></script>
 <script type="text/javascript" src="./js/bootstrap.min.js"></script>
-<script type="text/javascript" src="./js/dashboard.js"></script>
+
+<!--
+    surse interne
+-->
 <script type="text/javascript" src="./js/hbba.js"></script>
+<script type="text/javascript" src="./js/dashboard.js"></script>
 </head>
 
 <body onload="init()">
     
+        <!--
+            modulul pentru harta
+        -->
         <div id="nav"></div>
+        <!--
+            modulul pentru logo-ul ensta
+        -->
+        <div id="logo">
+            <img src="./img/ensta.png" alt="">
+        </div>
+        <!--
+            modulul pentru experiment
+        -->
+        <div id="experiment"></div>
+        
         
 </body>
 

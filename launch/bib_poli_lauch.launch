@@ -1,7 +1,9 @@
 <launch>
+        <!--
+        ce harta se va folosi
+        -->
         <arg name="map_number" default="1" />
         <arg name="map_file" default="$(find bib_poli_package)/config/maps/$(arg map_number)/map.yaml"/>
-        <arg name="language" default="en" />
         <!--
         LOAD MAP
         -->
@@ -20,30 +22,15 @@
         <node pkg="bib_poli_package" name="bib_poli_install_http" type="bib_poli_install_http.sh">
         </node>
 
+
         <!--
-        LOAD bib_poli_node
+        TODO: Load Lookafter
+        -->
+
+        <!--
+        LOAD bib_poli_node (sistemul central)
         -->
         <node pkg="bib_poli_package" name="bib_poli_node" type="bib_poli_prime.py" output="screen">
-            <param name="infofilename" value="$(find bib_poli_package)/config/$(arg map_number)_rooms.json" />
+            <param name="infofilename" value="$(find bib_poli_package)/config/$(arg map_number)_info.json" />
         </node>
-
-        <!--
-        LOAD Events writer
-        <node pkg="experiment_package" name="experiment_events_writer" type="experiment_events_writer.py">
-            <param name="filename" value="$(find experiment_package)/logs/$(arg map_number)_events.json" />
-        </node>
-
-        -->
-        <!--
-        LOAD Path writer
-        <node pkg="experiment_package" name="experiment_path_writer" type="experiment_path_writer.py">
-            <param name="filename" value="$(find experiment_package)/logs/$(arg map_number)_path.json" />
-        </node>
-
-        -->
-        <!--
-        LOAD Photo writer
-        <node pkg="experiment_package" name="experiment_photo_writer" type="experiment_photo.py">
-        </node>
-        -->
 </launch>
