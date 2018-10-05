@@ -239,7 +239,7 @@ class LogicManager:
         # topicul pentru comenzile pentru interfata web
         self.web_cmd_pub = rospy.Publisher(
                     '/bibpoli/web/cmd',
-                        std_msgs.String,
+                        std_msgs.msg.String,
                         latch=True, queue_size=5);
         # topicul pentru comenzile pentru urmarirea persoanelor
         self.look_after_pub = rospy.Publisher(
@@ -457,7 +457,7 @@ class LogicManager:
             # Asteptam ca acest modul sa centralizeze o persoana
             while True:
                 response = rospy.wait_for_message(
-                    '/bibpoli/lookup_rep',
+                    '/bibpoli/lookup/rep',
                     std_msgs.msg.String);
                 rospy.loginfo("[AUTONOMOUS_EXPERIMENT] getting from /bibpoli/lookup_rep:\n {}".format(response));
                 if (response.data == "CENTER"):
