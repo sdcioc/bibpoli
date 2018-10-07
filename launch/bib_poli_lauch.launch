@@ -24,8 +24,37 @@
 
 
         <!--
-        TODO: Load Lookafter
+        Load Lookafter
         -->
+        <node pkg="bib_poli_package" name="bib_poli_look_after" type="bib_poli_look_after.py">
+        </node>
+
+        <!--
+        Throttler pentru rgb camera
+        -->
+        <launch>
+        <node name="rgb_throttler" type="throttle" pkg="topic_tools" args="messages /xtion/rgb/image_rect_color/compressed 4 /throttle_camera/image" />
+        </launch>
+
+
+        <!--
+        Record rosbag
+        -->
+        <node pkg="rosbag" type="record" name="rosbag_record_full"
+        args="record -o /home/pal/logs/full_ /throttle_camera/image /laser_scan /sonar_base /amcl_pose"
+        respawn=true/>
+
+        <!--
+        Record rosbag on the contor
+        -->
+        <node pkg="bib_poli_package" type="bib_poli_rosbag.py" name="bib_poli_rosbag"/>
+
+        <!--
+        Record audio
+        -->
+        <node pkg="bib_poli_package" name="bib_poli_record_audio" type="bib_poli_record_audio.sh">
+        </node>
+
 
         <!--
         LOAD bib_poli_node (sistemul central)

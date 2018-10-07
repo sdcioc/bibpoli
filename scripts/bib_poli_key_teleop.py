@@ -182,7 +182,7 @@ class SimpleKeyTeleop():
 
         self._hz = rospy.get_param('~hz', 10)
 
-        self._forward_rate = rospy.get_param('/experiment_package/experiment/speed', 0.4)
+        self._forward_rate = rospy.get_param('/bib_poli_package/experiment/speed', 0.4)
         self._backward_rate = rospy.get_param('~backward_rate', 0.5)
         self._rotation_rate = rospy.get_param('~rotation_rate', 1.0)
         self._last_pressed = {}
@@ -228,7 +228,7 @@ class SimpleKeyTeleop():
             linear += l
             angular += a
         if linear > 0:
-            linear = linear * rospy.get_param('/experiment_package/experiment/speed', 0.4)
+            linear = linear * rospy.get_param('/bib_poli_package/experiment/speed', 0.4)
         else:
             linear = linear * self._backward_rate
         angular = angular * self._rotation_rate

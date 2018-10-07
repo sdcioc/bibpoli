@@ -7,7 +7,8 @@
         "start" : " START ",
         "stop"  : " Quit ",
         "main"  : " When ready press on the START button ",
-        "end"   : " Thank you ! "
+        "end"   : " Thank you ! ",
+        "showmap" : "SHOW MAP"
     },
     "parameters" : {
         "no_questions"     : "28"

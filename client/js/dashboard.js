@@ -216,6 +216,8 @@ function web_cmd_callback(msg) {
         document.getElementById('nav').hidden = true;
         document.getElementById('logo').hidden = true;
         document.getElementById('experiment').hidden = false;
-        //TODO:
+        //Activam pagina de start
+        document.getElementById('questions_page').hidden = true;
+        document.getElementById('start_page').hidden = false;
     }
 }

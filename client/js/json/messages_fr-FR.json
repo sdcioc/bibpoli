@@ -7,7 +7,8 @@
         "start" : " START ",
         "stop"  : " Quitter ",
         "main"  : " Lorsque vous êtes prêt, appuyez sur le bouton START ",
-        "end"   : " Je vous remercie pour votre aide ! "
+        "end"   : " Je vous remercie pour votre aide ! ",
+        "showmap" : "Afficher la carte"
     },
     "parameters" : {
         "no_questions"     : "28"

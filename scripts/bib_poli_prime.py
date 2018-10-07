@@ -27,15 +27,6 @@ import sensor_msgs.msg
 import pal_web_msgs.msg
 import std_srvs.srv
 
-# librari pentru face detection
-##opencv pentru imagini
-import cv2
-##dlib pentru recunoasteri faciale
-import dlib
-##librarie pentru convertirea din imagini ros in imagini opencv si viceversa
-import cv_bridge
-
-
 # convertirea datelor unui punct de interes intr-o pozitie de harta
 def convert_POIPosition_MapPosition(position):
     #tipul de mesaj pentru map
@@ -226,6 +217,15 @@ class LogicManager:
         # numele punctului de interes curent si pozitia acestuia pe harta
         self.poi_name = None;
         self.poi_position = None;
+        # contorul pentru numarul experiemntului
+        self.contor = 0;
+        # vectorul cu evenimente
+        self.events = [];
+        # calea catre directorul de loguri
+        rospack = rospkg.RosPack();
+        self.path_prefix = rospack.get_path('bib_poli_package') + "/logs/";
+        #calea catre fisierul cu evenimete TODO: sa o fac modificabila
+        self.eventsFile = self.path_prefix + "1_events.json"
         # topicul pentru comenzile luate de sistemul central
         self.command_pub = rospy.Publisher(
                     '/bibpoli/cmd',
@@ -246,6 +246,11 @@ class LogicManager:
                     '/bibpoli/lookup/cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
+        # topicul pentru comenzile pentru inregistrarea rosbagurilor
+        self.rosbag_pub = rospy.Publisher(
+                    '/bibpoli/rosbag/cmd',
+                        std_msgs.msg.String,
+                        latch=True, queue_size=5);
         # asteptare pentru inregistrarea topicurilor
         rospy.sleep(3);
         # subscriber pentru comenzile catre sistemul central
@@ -254,10 +259,6 @@ class LogicManager:
         rospy.Subscriber("amcl_pose", geometry_msgs.msg.PoseWithCovarianceStamped, self.position_subscriber_callback);
         # asteptare pentru inregistrarea acestora
         rospy.sleep(3);
-        # bridgeul pentru mesaje de tip imagine de la ros la opencv si viceversa
-        self.cvBridge = cv_bridge.CvBridge();
-        # detectorul de fete umane
-        self.faceDectector = dlib.get_frontal_face_detector();
         # ultima pozitie raportata de robot
         self.last_point = None;
         # asteptarea pentru pornirea serviciul de eliberare a costmapurilor
@@ -329,11 +330,29 @@ class LogicManager:
         self.poi_info_manager.next_poi();
         self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();
+    
+    # comanda pentru pornirea experiemntului de la un anumit contor
+    # si pornirea de la primul punct de interes din lista
+    def start_experiment(self, command):
+        self.contor = command['contor'];
+        next_command = {};
+        next_command['type'] = "START_NEXT_POI";
+        self.command_pub.publish(json.dumps(next_command));
+        self.rate.sleep();
 
     # setarea variabilelor pentru urmatorul punct de interes
     def start_next_poi_command(self, command):
         rospy.loginfo("[START_NEXT_POI] going from state {} to IDLE".format(self.state));
         self.state = "IDLE"
+        #daca am avut un experiemnt inainte si evenimente de la el le scriem in
+        #fisierul de evenimente si eliberam vectorul de fisiere
+        if (len(self.events) > 0):
+            data_to_write = json.dumps(self.events);
+            with open(self.eventsFile, 'a') as fd:
+                fd.write(data_to_write);
+                self.events = [];
+        #este un nou experiment deci marim contorul
+        self.contor = self.contor + 1;
         # daca este o comanda manual clasa
         # ce se ocupa de informatii pentru punctele de interes
         # la pozitia acestuia astfel continuam cu punct oferit de acesta inainte
@@ -376,6 +395,12 @@ class LogicManager:
     def goto_poi_command(self, command):
         rospy.loginfo("[GOTO_POI] going from state {} to GOING_TO_POI".format(self.state));
         self.state = "GOING_TO_POI"
+        event = {};
+        event['contor'] = self.contor;
+        event['type']= "GO_TO_POI";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
         # setam destinatia pentru deplasarea autonoma
         self.move_pub.publish(self.poi_position);
         self.rate.sleep();
@@ -404,6 +429,13 @@ class LogicManager:
                 # de o persoana asa ca in plus redam un mesaj audio care solicita sa ii
                 # fie eliberata calea asteapta o perioada dupa care multumeste
                 if(self.tries == 3):
+                    event = {};
+                    event['position'] = self.current_position;
+                    event['contor'] = self.contor;
+                    event['type']= "BLOCKED";
+                    event['poi_name'] = self.poi_name;
+                    event['time'] = rospy.get_time();
+                    self.events.append(copy.deepcopy(event));
                     self.tries = 0;
                     speed = random.randint(0,1);
                     message_type = random.randint(0,1);
@@ -432,6 +464,12 @@ class LogicManager:
             # a porni experimentul autonom care incepe prin cautarea persoanelor
             rospy.loginfo("[VERIFY_DISTANCE_POI] going from state {} to ARRIVED_POI".format(self.state));
             self.state = "ARRIVED_POI"
+            event = {};
+            event['contor'] = self.contor;
+            event['type']= "REACHED_POI";
+            event['poi_name'] = self.poi_name;
+            event['time'] = rospy.get_time();
+            self.events.append(copy.deepcopy(event));
             
             rospy.loginfo("[VERIFY_DISTANCE_POI] ARRIVED POI- WAITING CHECK PEOPLE");
 
@@ -460,29 +498,21 @@ class LogicManager:
                     '/bibpoli/lookup/rep',
                     std_msgs.msg.String);
                 rospy.loginfo("[AUTONOMOUS_EXPERIMENT] getting from /bibpoli/lookup_rep:\n {}".format(response));
-                if (response.data == "CENTER"):
+                response_dict = json.loads(response.data);
+                if (response_dict['state'] == "CENTER"):
+                    event = {};
+                    event['people'] = response_dict['people'];
+                    event['contor'] = self.contor;
+                    event['type']= "FIND_PEOPLE";
+                    event['poi_name'] = self.poi_name;
+                    event['time'] = rospy.get_time();
+                    self.events.append(copy.deepcopy(event));
                     break;
             # Incepem ceea ce trebuie sa spunem sigur selectand random tipul de mesaje folosite
             # din fiecare grupa si viteza de vorbire a robotului
-            # se incepe cu mesajul de introducere, dupa mesajul de descriere pentru ensta
-            # mesajul pentru ruta catre ensta si afisarea hartii cu calea catre standul ENSTA
-            # pe interfata robotului si spunerea mesajului de multumire
+            # se efectueaza experimentul
             # dupa se da comanda pentru trecerea la urmatorul punct de interes
-            speed = random.randint(0,1);
-            message_type = random.randint(0,1);
-            self.sound_manager.play_introduction(message_type, speed);
-            rospy.sleep(1);
-            message_type = random.randint(0,2);
-            self.sound_manager.play_ensta_description(message_type, speed);
-            rospy.sleep(1);
-            message_type = random.randint(0,1);
-            self.web_cmd_pub.publish("SHOW_MAP");
-            self.rate.sleep();
-            self.sound_manager.play_road_to_ensta(message_type, speed);
-            rospy.sleep(7);
-            self.sound_manager.play_thank_you(speed);
-            rospy.sleep(2);
-            #TODO: EXPERIMENT
+            self.experiment(random.randint(0,1), random.randint(0,1), random.randint(0,2), random.randint(0,1))
             next_command = {}
             next_command['type'] = "NEXT_POI";
             self.command_pub.publish(json.dumps(next_command));
@@ -499,28 +529,86 @@ class LogicManager:
             rospy.loginfo("[MANUAL_EXPERIMENT] ARRIVED AT ENSTA");
         else:
             # viteza robotului si tipul de mesaje folosite sunt in cadrul comenzii
-            # se incepe cu mesajul de introducere, dupa mesajul de descriere pentru ensta
-            # mesajul pentru ruta catre ensta si afisarea hartii cu calea catre standul ENSTA
-            # pe interfata robotului si spunerea mesajului de multumire
+            # se efectuaza experimentul cu aceste detalii
             # dupa care se va astepta o noua comanda manuala
-            speed = command['speed'];
-            message_type = command['introduction_type'];
-            self.sound_manager.play_introduction(message_type, speed);
-            rospy.sleep(1);
-            message_type = command['description_type'];
-            self.sound_manager.play_ensta_description(message_type, speed);
-            rospy.sleep(1);
-            message_type = command['road_type'];
-            self.web_cmd_pub.publish("SHOW_MAP");
-            self.rate.sleep();
-            self.sound_manager.play_road_to_ensta(message_type, speed);
-            self.rate.sleep();
-            rospy.sleep(7);
-            self.sound_manager.play_thank_you(speed);
-            rospy.sleep(2);
-            #TODO: experiment
+            self.experiment(command['speed'], command['introduction_type'], command['description_type'], command['road_type'])
         #multiple computations
         rospy.sleep(4);
+    
+    def experiment(self, speed, introduction_type, description_type, road_type):
+        # se incepe cu mesajul de introducere, dupa mesajul de descriere pentru ensta
+        # mesajul pentru ruta catre ensta si afisarea hartii cu calea catre standul ENSTA
+        # pe interfata robotului si spunerea mesajului de multumire prin care il roaga
+        # sa ia parte la un chestionar
+
+        #se activeaza inregistrarea rosbagului
+        rosbag_command = {};
+        rosbag_command['state'] = "START";
+        rosbag_command['contor'] = self.contor;
+        self.rosbag_pub.publish(json.dumps(rosbag_command));
+        event = {};
+        event['speed'] = speed;
+        event['introduction_type'] = introduction_type;
+        event['description_type'] = description_type;
+        event['road_type'] = road_type;
+        event['contor'] = self.contor;
+        event['type']= "INTERACTION_STARTED";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
+        self.sound_manager.play_introduction(introduction_type, speed);
+        rospy.sleep(1);
+        self.sound_manager.play_ensta_description(description_type, speed);
+        rospy.sleep(1);
+        event = {};
+        event['contor'] = self.contor;
+        event['type']= "SHOW_MAP";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
+        self.web_cmd_pub.publish("SHOW_MAP");
+        self.rate.sleep();
+        self.sound_manager.play_road_to_ensta(road_type, speed);
+        rospy.sleep(7);
+        self.sound_manager.play_thank_you(speed);
+        # chestionar
+        # se afiseaza chestionarul dupa care se asteapta
+        # pornirea si terminarea chestioanrului de catre participant
+        event = {};
+        event['contor'] = self.contor;
+        event['type']= "START_QUESTIONS";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
+        self.web_cmd_pub.publish("START_EXPRIMENT");
+        try:
+            while True:
+                reply = rospy.wait_for_message(
+                '/bibpoli/web/rep',
+                std_msgs.msg.String, 30);
+                rospy.loginfo("[EXPERIMENT]Start gettin {}".format(reply));
+                if (reply.data == "pressStart"):
+                    break;
+            while True:
+                finish = rospy.wait_for_message(
+                '/bibpoli/web/rep',
+                std_msgs.msg.String, 700);
+                rospy.loginfo("[EXPERIMENT]Quit gettin {}".format(finish));
+                if (finish.data == "pressQuit"):
+                    break;
+        except:
+            rospy.loginfo("[EXPERIMENT] experiment nepornit sau neterminat");
+        event = {};
+        event['contor'] = self.contor;
+        event['type']= "INTERACTION_FINISHED";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
+        # se opreste inregistrarea rosbagului
+        rosbag_command = {};
+        rosbag_command['state'] = "STOP";
+        rosbag_command['contor'] = self.contor;
+        self.rosbag_pub.publish(json.dumps(rosbag_command));
 
     # comanda de a merge in starea stop
     def stop_command(self, command):
