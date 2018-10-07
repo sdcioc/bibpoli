@@ -8,36 +8,46 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+* PAL ubuntu.14.04 with ros-indigo from iso image provided from pal or ros-indigo on ubuntu 14.04 http://wiki.ros.org/indigo/Installation/Ubuntu with tiago packages http://wiki.ros.org/Robots/TIAGo/Tutorials/Install
+and http://wiki.ros.org/Robots/TIAGo/Tutorials/Installation/TiagoSimulation
 
+* opencv library
 ```
-dlib
-opencv
-ros-indigo
-ros-indigo-cv_bridge
+sudo apt-get install ros-indigo-vision-opencv
+```
+* ros cv bridge
+```
+sudo apt-get install ros-indigo-cv-bridge
+```
+* dlib library
+```
+sudo apt-get update
+sudo apt-get install build-essential cmake
+sudo apt-get install libopenblas-dev liblapack-dev 
+sudo apt-get install libx11-dev libgtk-3-dev
+sudo apt-get install python python-dev python-pip
+sudo apt-get install python3 python3-dev python3-pip
+pip install numpy
+pip install dlib
 ```
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
+* Clone and build the repo
 ```
 mkdir -p ~/bibpoli_ws/src
 cd ~/bibpoli_ws/src
 git clone https://github.com/sdcioc/bibpoli.git
 cd ~/bibpoli_ws
 catkin build
+source devel/setup.bash
 ```
 
-And repeat
+* Test the system
 
 ```
-until finished
+roslaunch bib_poli_package bib_poli_launch.launch
 ```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
@@ -62,6 +72,11 @@ Give an example
 ## Deployment
 
 Add additional notes about how to deploy this on a live system
+
+## Deploy on Tiago
+```
+rosrun pal_deploy deploy.py -p bib_poli_package tiago-27c
+```
 
 ## Built With
 
@@ -154,6 +169,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Experiment of HRI in the wild at X-Forum 2018
