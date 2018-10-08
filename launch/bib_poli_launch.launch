@@ -32,9 +32,7 @@
         <!--
         Throttler pentru rgb camera
         -->
-        <launch>
         <node name="rgb_throttler" type="throttle" pkg="topic_tools" args="messages /xtion/rgb/image_rect_color/compressed 4 /throttle_camera/image" />
-        </launch>
 
 
         <!--
@@ -42,7 +40,7 @@
         -->
         <node pkg="rosbag" type="record" name="rosbag_record_full"
         args="record -o /home/pal/hddextern/bibpoli/full_ /throttle_camera/image /laser_scan /sonar_base /amcl_pose"
-        respawn=true/>
+        respawn="true"/>
 
         <!--
         Record rosbag on the contor

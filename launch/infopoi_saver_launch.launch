@@ -5,6 +5,6 @@
         -->
         <node pkg="bib_poli_package" name="bib_poli_package_poi_manager" type="bib_poli_poi_manager.py">
             <param name="operation_type" value="info" />
-            <param name="filename" value="$(find experiment_package)/config/$(arg experiment_number)_info.json" />
+            <param name="filename" value="$(find bib_poli_package)/config/$(arg experiment_number)_info.json" />
         </node>
 </launch>
