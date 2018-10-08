@@ -61,9 +61,10 @@ class ExperimentManualCommandManager:
         self.rate.sleep();
     
     # comanda pentru pornirea sistemului central si experimentului mare
-    def send_start_experiment_command(self):
+    def send_start_experiment_command(self, contor):
         next_command = {};
         next_command['type'] = "START_EXPERIMENT";
+        next_command['contor'] = contor;
         print "[INFO][MANUAL_COMMAND] sending START_EXPERIMENT";
         self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();       
@@ -112,7 +113,8 @@ if __name__ == '__main__':
                     """
             command_number = int(raw_input("Enter your command:\n"));
             if (command_number == 0):
-                emc.send_start_experiment_command();
+                contor = raw_input("Enter contor:");
+                emc.send_start_experiment_command(contor);
             elif (command_number == 1):
                 emc.send_stop_command();
             elif (command_number == 2):

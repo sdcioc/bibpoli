@@ -304,7 +304,7 @@ class LogicManager:
             elif (current_command['type'] == "STOP"):
                 self.stop_command(current_command);
             elif (current_command['type'] == "START_EXPERIMENT"):
-                self.start_next_poi_command(current_command);
+                self.start_experiment(current_command);
             else:
                 rospy.loginfo("[COMMAND_CALLBACK] state {} Wrong Command type command {}".format(self.state, current_command['type']));
  

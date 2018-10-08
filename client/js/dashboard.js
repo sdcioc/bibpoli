@@ -1,5 +1,5 @@
 // ros-ul
-var ros;
+//var ros;
 
 //canvas care produs harta
 var viewer;
@@ -102,10 +102,15 @@ function calculate_path() {
     });
 }
 
+
+function init()
+{
+    get_lang('messages', init_sec);
+}
 /*
 functia de initializare
 */
-function init() {
+function init_sec(lang_file) {
     //ros = new ROSLIB.Ros({url: 'ws://' + window.location.hostname + ':9090'});
     /*
     Cele trei tipuri de view-uri ale paginii
@@ -215,7 +220,7 @@ function init() {
         s.x = ensta_position.pose.position.x;
         s.y = -ensta_position.pose.position.y;
         viewer.addObject(s);
-        var positionVec3 = new ROSLIB.Vector3(ensta_position.pose.position.x, ensta_position.pose.position.y, 0);
+        var positionVec3 = new ROSLIB.Vector3({x:ensta_position.pose.position.x, y:ensta_position.pose.position.y, z:0});
         var orientation = new ROSLIB.Quaternion({x:0, y:0, z:0, w:ensta_position.pose.orientation.w});
         ensta_pose = new ROSLIB.Pose({
             'position' : positionVec3,
