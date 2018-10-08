@@ -112,7 +112,7 @@ Subdirectorul img conține imaginea cu logo-ul ENSTA
 ### Config
 Conține configurări pentru sistemul central. Directorul este împărțit în:
 * subdirectorul maps care conține cât un director pentru fiecare hartă folosită
-* subdirectorul sound care conține fișierele audio ce vor fi redate de sistemul central
+* subdirectorul sounds care conține fișierele audio ce vor fi redate de sistemul central
 * fișiere de forma x_poi.json conțin datele despre puncte de interes prezente pe harta x
 * fișiere de forma x_info.json conțin date suplimentare despre punctele de interes prezente pe harta x
 

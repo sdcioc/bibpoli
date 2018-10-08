@@ -60,20 +60,20 @@ class POILocationManager:
     def __init__(self):
         self.prefix = '/mmap/poi/submap_0/';
 
-	#returneaza pozitia pe harta a punctului de interes
-	def get_position(self, poi_name):
-		print "[INFO] getting position for poi {}".format(poi_name) 
-		poi_name = convert_POIName_RosparamName(poi_name)
-		try:
-			poi = rospy.get_param(poi_name)
-			if not poi:
-				return None
-			if len(poi[2:]) != 3:
-				return None
-			position = convert_POIPosition_MapPosition(poi[2:])
-			return position
-		except KeyError:
-			return None
+    #returneaza pozitia pe harta a punctului de interes
+    def get_position(self, poi_name):
+        print "[INFO] getting position for poi {}".format(poi_name) 
+        poi_name = convert_POIName_RosparamName(poi_name)
+        try:
+            poi = rospy.get_param(poi_name)
+            if not poi:
+                return None
+            if len(poi[2:]) != 3:
+                return None
+            position = convert_POIPosition_MapPosition(poi[2:])
+            return position
+        except KeyError:
+            return None
 
 
 #Clasa ce ofera informatiile despre puncte de interes din camere
@@ -126,7 +126,7 @@ class SoundManager:
         if(speed == 1):
             command = command + "m.wav";
         else:
-            command = command + "wav";
+            command = command + ".wav";
         subprocess.check_output(command.split());
 
     #redarea mesajului de descriere a facultatii
@@ -141,7 +141,7 @@ class SoundManager:
         if(speed == 1):
             command = command + "m.wav";
         else:
-            command = command + "wav";
+            command = command + ".wav";
         subprocess.check_output(command.split());
     
     #redarea mesajului pentru descrierea cai de urmatul
@@ -155,7 +155,7 @@ class SoundManager:
         if(speed == 1):
             command = command + "m.wav";
         else:
-            command = command + "wav";
+            command = command + ".wav";
         subprocess.check_output(command.split());
     
     #redarea mesajului de multumire
@@ -165,7 +165,7 @@ class SoundManager:
         if(speed == 1):
             command = command + "m.wav";
         else:
-            command = command + "wav";
+            command = command + ".wav";
         subprocess.check_output(command.split());
 
     #redarea unui mesaj prin care se cere permisiunea
@@ -181,7 +181,7 @@ class SoundManager:
         if(speed == 1):
             command = command + "m.wav";
         else:
-            command = command + "wav";
+            command = command + ".wav";
         subprocess.check_output(command.split());
     
 # Clasa care decide toata logica experiemntului si mdoului de functionare a robotului
