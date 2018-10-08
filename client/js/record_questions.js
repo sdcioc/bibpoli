@@ -6,7 +6,7 @@ quest.questions_results = []; // empty array for the answers
 //topicul pe care sunt transmise comenzile din interfata
 quest.game_status = new ROSLIB.Topic({
 	ros: ros,
-	name: '/experiment/web/cmd',
+	name: '/bibpoli/web/rep',
 	messageType: 'std_msgs/String'
 });
 

@@ -217,6 +217,8 @@ class LogicManager:
         # numele punctului de interes curent si pozitia acestuia pe harta
         self.poi_name = None;
         self.poi_position = None;
+        # ultima pozitie raportata de robot
+        self.last_point = None;
         # contorul pentru numarul experiemntului
         self.contor = 0;
         # vectorul cu evenimente
@@ -259,8 +261,6 @@ class LogicManager:
         rospy.Subscriber("amcl_pose", geometry_msgs.msg.PoseWithCovarianceStamped, self.position_subscriber_callback);
         # asteptare pentru inregistrarea acestora
         rospy.sleep(3);
-        # ultima pozitie raportata de robot
-        self.last_point = None;
         # asteptarea pentru pornirea serviciul de eliberare a costmapurilor
         rospy.wait_for_service('move_base/clear_costmaps');
         # functia pentru apelarea serviciului respectiv
@@ -430,7 +430,14 @@ class LogicManager:
                 # fie eliberata calea asteapta o perioada dupa care multumeste
                 if(self.tries == 3):
                     event = {};
-                    event['position'] = self.current_position;
+                    event['pose'] = {};
+                    event['pose']['position']['x'] = self.current_position.position.x;
+                    event['pose']['position']['y'] = self.current_position.position.y;
+                    event['pose']['position']['z'] = self.current_position.position.z;
+                    event['pose']['orientation']['x'] = self.current_position.orientation.x;
+                    event['pose']['orientation']['y'] = self.current_position.orientation.y;
+                    event['pose']['orientation']['z'] = self.current_position.orientation.z;
+                    event['pose']['orientation']['w'] = self.current_position.orientation.w;
                     event['contor'] = self.contor;
                     event['type']= "BLOCKED";
                     event['poi_name'] = self.poi_name;
@@ -580,7 +587,7 @@ class LogicManager:
         event['poi_name'] = self.poi_name;
         event['time'] = rospy.get_time();
         self.events.append(copy.deepcopy(event));
-        self.web_cmd_pub.publish("START_EXPRIMENT");
+        self.web_cmd_pub.publish("START_EXPERIMENT");
         try:
             while True:
                 reply = rospy.wait_for_message(

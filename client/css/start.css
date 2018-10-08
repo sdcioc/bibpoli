@@ -309,3 +309,9 @@ div#swal2-content.swal2-content{
 .text_center {
 	text-align: center;
 }
+
+
+#logo {
+	margin-left: 30%;
+	background-color: white;
+}

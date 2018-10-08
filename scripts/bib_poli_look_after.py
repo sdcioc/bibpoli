@@ -92,6 +92,7 @@ class LookUpLogicManager:
                 # fetele din aceasta cazua efectuez mai multe incercari
                 local_max = 0;
                 j = 0;
+                rospy.sleep(2);
                 while(j < 3):
                     try:
                         reply = rospy.wait_for_message(

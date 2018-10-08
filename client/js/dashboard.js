@@ -14,11 +14,99 @@ var glonalPlannerService;
 //path-ul de la robot la standul ensta
 var ensta_path;
 
+
+/*
+Callback pentru decizile legate de le trei moduri de vizionare
+Din motive de performanta mai intai se ascund celelalte module
+si apoi se afiseaza modulul dorit ca sa se faca astfel doar doua randari
+*/
+function web_cmd_callback(msg) {
+    command = msg.data;
+    if(command == "SHOW_MAP") {
+        calculate_path();
+        document.getElementById('logo').hidden = true;
+        document.getElementById('experiment').hidden = true;
+        document.getElementById('nav').hidden = false;
+    }
+    if(command == "SHOW_LOGO") {
+        document.getElementById('nav').hidden = true;
+        document.getElementById('experiment').hidden = true;
+        document.getElementById('logo').hidden = false;
+    }
+    if(command == "START_EXPERIMENT") {
+        document.getElementById('nav').hidden = true;
+        document.getElementById('logo').hidden = true;
+        document.getElementById('experiment').hidden = false;
+        //Activam pagina de start
+        document.getElementById('questions_page').hidden = true;
+        document.getElementById('start_page').hidden = false;
+    }
+}
+
+
+/*
+Converteste datele din cadrul unui punct de interes in pozitie pe harta
+*/
+function convert_POIPosition_MapPosition(position)
+{
+    pos = {};
+    pos.pose = {};
+    pos.pose.position = {};
+    pos.pose.orientation = {};
+	pos.pose.position.x = position[2];
+	pos.pose.position.y = position[3];
+	pos.pose.orientation.z = Math.sin(position[4] / 2.0);
+    pos.pose.orientation.w = Math.cos(position[4] / 2.0);
+    return pos;
+}
+
+/*
+Calculeaza path-ul de la robot la stand-ul ensta
+Daca este deja un path pe harta il sterge.
+Creeaza un service request pentru global planner
+ce contine ca sursa pozitia robotului si ca destinatie
+pozitia standului ensta. Path-ul nou creat il adauga
+la harta pentru afisare
+*/
+function calculate_path() {
+    if (ensta_path != null && ensta_path != undefined) {
+        viewer.removeObject(ensta_path);
+    }
+    ensta_path = new ROS2D.TraceShape({
+        maxPoses: 0,
+        strokeSize: 0.2
+    });
+    var req = new ROSLIB.ServiceRequest({
+        start:  {
+            header : {
+            frame_id : '/map'
+            },
+            pose : robot_pose
+        },
+        goal: {
+            header : {
+            frame_id : '/map'
+            },
+            pose : ensta_pose
+        }
+    })
+
+    glonalPlannerService.callService(req, function(result) {
+        console.log("result from service status: " )
+        console.log(result);
+        for (var x in result.plan.poses) {
+            console.log(x);
+            ensta_path.addPose(result.plan.poses[x].pose);
+        }
+        viewer.addObject(ensta_path);
+    });
+}
+
 /*
 functia de initializare
 */
 function init() {
-    ros = new ROSLIB.Ros({url: 'ws://' + window.location.hostname + ':9090'});
+    //ros = new ROSLIB.Ros({url: 'ws://' + window.location.hostname + ':9090'});
     /*
     Cele trei tipuri de view-uri ale paginii
     -nav : modul in care este arata harta
@@ -136,88 +224,3 @@ function init() {
     });
 }
 
-/*
-Converteste datele din cadrul unui punct de interes in pozitie pe harta
-*/
-function convert_POIPosition_MapPosition(position)
-{
-    pos = {};
-    pos.pose = {};
-    pos.pose.position = {};
-    pos.pose.orientation = {};
-	pos.pose.position.x = position[2];
-	pos.pose.position.y = position[3];
-	pos.pose.orientation.z = Math.sin(position[4] / 2.0);
-    pos.pose.orientation.w = Math.cos(position[4] / 2.0);
-    return pos;
-}
-
-/*
-Calculeaza path-ul de la robot la stand-ul ensta
-Daca este deja un path pe harta il sterge.
-Creeaza un service request pentru global planner
-ce contine ca sursa pozitia robotului si ca destinatie
-pozitia standului ensta. Path-ul nou creat il adauga
-la harta pentru afisare
-*/
-function calculate_path() {
-    if (ensta_path != null && ensta_path != undefined) {
-        viewer.removeObject(ensta_path);
-    }
-    ensta_path = new ROS2D.TraceShape({
-        maxPoses: 0,
-        strokeSize: 0.2
-    });
-    var req = new ROSLIB.ServiceRequest({
-        start:  {
-            header : {
-            frame_id : '/map'
-            },
-            pose : robot_pose
-        },
-        goal: {
-            header : {
-            frame_id : '/map'
-            },
-            pose : ensta_pose
-        }
-    })
-
-    glonalPlannerService.callService(req, function(result) {
-        console.log("result from service status: " )
-        console.log(result);
-        for (var x in result.plan.poses) {
-            console.log(x);
-            ensta_path.addPose(result.plan.poses[x].pose);
-        }
-        viewer.addObject(ensta_path);
-    });
-}
-
-/*
-Callback pentru decizile legate de le trei moduri de vizionare
-Din motive de performanta mai intai se ascund celelalte module
-si apoi se afiseaza modulul dorit ca sa se faca astfel doar doua randari
-*/
-function web_cmd_callback(msg) {
-    command = msg;
-    if(command == "SHOW_MAP") {
-        calculate_path();
-        document.getElementById('logo').hidden = true;
-        document.getElementById('experiment').hidden = true;
-        document.getElementById('nav').hidden = false;
-    }
-    if(command == "SHOW_LOGO") {
-        document.getElementById('nav').hidden = true;
-        document.getElementById('experiment').hidden = true;
-        document.getElementById('logo').hidden = false;
-    }
-    if(command == "START_EXPRIMENT") {
-        document.getElementById('nav').hidden = true;
-        document.getElementById('logo').hidden = true;
-        document.getElementById('experiment').hidden = false;
-        //Activam pagina de start
-        document.getElementById('questions_page').hidden = true;
-        document.getElementById('start_page').hidden = false;
-    }
-}
