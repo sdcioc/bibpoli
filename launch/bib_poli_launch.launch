@@ -4,6 +4,7 @@
         -->
         <arg name="map_number" default="1" />
         <arg name="map_file" default="$(find bib_poli_package)/config/maps/$(arg map_number)/map.yaml"/>
+        <param name="/user_lang" value="fr-FR"/>
         <!--
         LOAD MAP
         -->
