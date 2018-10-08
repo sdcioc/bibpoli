@@ -30,7 +30,7 @@ class RosbagManager:
     def loop(self):
         while not rospy.is_shutdown():
             if (self.state == "START"):
-                command = self.utility + "-o /home/pal/logs/exp_" + str(self.contor) + "_" + self.topics;
+                command = self.utility + "-o /home/pal/hddextern/bibpoli/exp_" + str(self.contor) + "_" + self.topics;
                 subprocess.check_output(command.split());
             else:
                 rospy.sleep(1);

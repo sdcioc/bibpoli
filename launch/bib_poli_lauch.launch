@@ -26,7 +26,7 @@
         <!--
         Load Lookafter
         -->
-        <node pkg="bib_poli_package" name="bib_poli_look_after" type="bib_poli_look_after.py">
+        <node pkg="bib_poli_package" name="bib_poli_look_after" type="bib_poli_look_after.py" output="screen">
         </node>
 
         <!--
@@ -41,13 +41,13 @@
         Record rosbag
         -->
         <node pkg="rosbag" type="record" name="rosbag_record_full"
-        args="record -o /home/pal/logs/full_ /throttle_camera/image /laser_scan /sonar_base /amcl_pose"
+        args="record -o /home/pal/hddextern/bibpoli/full_ /throttle_camera/image /laser_scan /sonar_base /amcl_pose"
         respawn=true/>
 
         <!--
         Record rosbag on the contor
         -->
-        <node pkg="bib_poli_package" type="bib_poli_rosbag.py" name="bib_poli_rosbag"/>
+        <node pkg="bib_poli_package" type="bib_poli_rosbag.py" name="bib_poli_rosbag" output="screen"/>
 
         <!--
         Record audio

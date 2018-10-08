@@ -225,7 +225,7 @@ class LogicManager:
         rospack = rospkg.RosPack();
         self.path_prefix = rospack.get_path('bib_poli_package') + "/logs/";
         #calea catre fisierul cu evenimete TODO: sa o fac modificabila
-        self.eventsFile = self.path_prefix + "1_events.json"
+        self.eventsFile = "/home/pal/hddextern/bibpoli/" + "events.json"
         # topicul pentru comenzile luate de sistemul central
         self.command_pub = rospy.Publisher(
                     '/bibpoli/cmd',

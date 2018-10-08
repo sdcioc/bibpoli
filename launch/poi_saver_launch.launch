@@ -1,0 +1,10 @@
+<launch>
+        <arg name="experiment_number" default="1" />
+        <!--
+        SAVE POIs
+        -->
+        <node pkg="bib_poli_package" name="bib_poli_package_poi_manager" type="bib_poli_poi_manager.py">
+            <param name="operation_type" value="save" />
+            <param name="filename" value="$(find bib_poli_package)/config/$(arg experiment_number)_pois.json" />
+        </node>
+</launch>
