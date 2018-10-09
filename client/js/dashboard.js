@@ -41,6 +41,9 @@ function web_cmd_callback(msg) {
         document.getElementById('questions_page').hidden = true;
         document.getElementById('start_page').hidden = false;
     }
+    if(command == "END_GAME") {
+        endGame();
+    }
 }
 
 

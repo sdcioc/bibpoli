@@ -167,6 +167,26 @@ class SoundManager:
         else:
             command = command + ".wav";
         subprocess.check_output(command.split());
+    
+    #redarea mesajului ca nu poate auzi
+    def play_no_hearing(self, speed):
+        command = self.utility + self.prefix;
+        command = command + "12";
+        if(speed == 1):
+            command = command + "m.wav";
+        else:
+            command = command + ".wav";
+        subprocess.check_output(command.split());
+    
+    #redarea mesajului pentru completarea chestionarului
+    def play_questionaire(self, speed):
+        command = self.utility + self.prefix;
+        command = command + "13";
+        if(speed == 1):
+            command = command + "m.wav";
+        else:
+            command = command + ".wav";
+        subprocess.check_output(command.split());
 
     #redarea unui mesaj prin care se cere permisiunea
     #de a se elibera calea robotului
@@ -305,6 +325,8 @@ class LogicManager:
                 self.stop_command(current_command);
             elif (current_command['type'] == "START_EXPERIMENT"):
                 self.start_experiment(current_command);
+            elif (current_command['type'] == "PLAY_NO_HEARING"):
+                self.play_no_hearing(current_command);
             else:
                 rospy.loginfo("[COMMAND_CALLBACK] state {} Wrong Command type command {}".format(self.state, current_command['type']));
  
@@ -320,6 +342,11 @@ class LogicManager:
         self.state = "MANUAL_COMPLETE"
         self.move_pub.publish(self.poi_location_manager.get_position(command['poi_name']));
         self.rate.sleep();
+
+    #play no hearing
+    def play_no_hearing(self, command):
+        rospy.loginfo("[PLAY_NO_HEARING] play");
+        self.sound_manager.play_no_hearing(random.randint(0,1));
 
     # Aflarea urmatorului punct de interes din cadrul sistemului
     def next_poi_command(self, command):
@@ -581,6 +608,8 @@ class LogicManager:
         # chestionar
         # se afiseaza chestionarul dupa care se asteapta
         # pornirea si terminarea chestioanrului de catre participant
+        rospy.sleep(1);
+        self.sound_manager.play_questionaire(speed);
         event = {};
         event['contor'] = self.contor;
         event['type']= "START_QUESTIONS";
@@ -588,23 +617,27 @@ class LogicManager:
         event['time'] = rospy.get_time();
         self.events.append(copy.deepcopy(event));
         self.web_cmd_pub.publish("START_EXPERIMENT");
+        self.rate.sleep();
         try:
             while True:
                 reply = rospy.wait_for_message(
                 '/bibpoli/web/rep',
-                std_msgs.msg.String, 30);
+                std_msgs.msg.String, 50);
                 rospy.loginfo("[EXPERIMENT]Start gettin {}".format(reply));
                 if (reply.data == "pressStart"):
                     break;
             while True:
                 finish = rospy.wait_for_message(
                 '/bibpoli/web/rep',
-                std_msgs.msg.String, 700);
+                std_msgs.msg.String);
                 rospy.loginfo("[EXPERIMENT]Quit gettin {}".format(finish));
                 if (finish.data == "pressQuit"):
                     break;
         except:
             rospy.loginfo("[EXPERIMENT] experiment nepornit sau neterminat");
+        # setam interfata web la logo-ul ENSTA
+        self.web_cmd_pub.publish("SHOW_LOGO");
+        self.rate.sleep();
         event = {};
         event['contor'] = self.contor;
         event['type']= "INTERACTION_FINISHED";

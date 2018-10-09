@@ -7,12 +7,17 @@ import std_msgs.msg
 import random
 
 # Clasa ce transmite comenzile manuale
-# catre sitemul central
+# catre sitemul central sau catre interfata web
 class ExperimentManualCommandManager:
     def __init__(self):
         # topicul pentru comenzile catre sistemul central
         self.command_pub = rospy.Publisher(
                     'bibpoli/cmd',
+                        std_msgs.msg.String,
+                        latch=True, queue_size=5);
+        # topicul pentru comenzile catre sistemul central
+        self.web_command_pub = rospy.Publisher(
+                    'bibpoli/web/cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
         #rata de publicare
@@ -83,6 +88,11 @@ class ExperimentManualCommandManager:
         self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();
 
+    # trimiterea unel comenzi de stio
+    def send_web_endGame_command(self):
+        self.web_command_pub.publish("END_GAME");
+        self.rate.sleep();
+
 if __name__ == '__main__':
     # initializare nod ros
     rospy.init_node('bib_poli_manual_interface', anonymous=True);
@@ -109,7 +119,9 @@ if __name__ == '__main__':
                     6 : FINISH_EXPERIMENT\n
                     7 : GOTO_POI\n
                     8 : NEXT_POI\n
-                    9 : EXIT
+                    9 : EXIT\n
+                    10 : PLAY_NO_HEARING\n
+                    11 : WEB_END_GAME
                     """
             command_number = int(raw_input("Enter your command:\n"));
             if (command_number == 0):
@@ -135,6 +147,8 @@ if __name__ == '__main__':
                 description_type = random.randint(0,2);
                 road_type = random.randint(0,1);
                 emc.send_manual_experiment_command(speed, introduction_type, description_type, road_type);
+            elif (command_number == 11):
+                emc.send_web_endGame_command();
             else:
                 command_type = "";
                 if (command_number == 6):
@@ -145,6 +159,8 @@ if __name__ == '__main__':
                     command_type = "NEXT_POI"
                 elif (command_number == 9):
                     break;
+                elif (command_number == 10):
+                    command_type = "PLAY_NO_HEARING"
                 else:
                     print "[ERORRE][MANUAL_COMMAND] command_number {}".format(command_number);
                 emc.send_general_command(command_type);
