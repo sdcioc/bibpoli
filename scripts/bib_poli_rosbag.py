@@ -20,7 +20,7 @@ class RosbagManager:
         #conotrul ce reprezinta numarul experimentului
         self.contor = 0;
         # topicurile inregistrate si durata pentru verificare daca se mai face sau nu inregistrarea
-        self.topics = " --duration=3m /xtion/depth/image_rect /xtion/rgb/image_rect_color /thermal_detect/image"
+        self.topics = " --duration=3m /xtion/depth/image_rect /xtion/rgb/image_rect_color /thermal_image"
         # un subscriber pentru comenzile de la sistemul central
         rospy.Subscriber("bibpoli/rosbag/cmd", std_msgs.msg.String, self.command_subscriber);
 
