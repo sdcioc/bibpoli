@@ -32,6 +32,8 @@ class LookUpLogicManager:
         self.faceDectector = dlib.get_frontal_face_detector();
         # starea sistemului
         self.state = "STOP";
+        #
+        self.contor = 0;
         # un subscriber pentru comenzile venite de la sistemul central
         rospy.Subscriber("bibpoli/lookup/cmd", std_msgs.msg.String, self.command_subscriber);
         # un Action Client pentru Action Server-ul move_base care primeste ca goal destinatii
@@ -40,10 +42,12 @@ class LookUpLogicManager:
         self.move_base_actionlib_client.wait_for_server();
 
     #callback-ul pentru comenzile venite
-    def command_subscriber(self, command):
-        self.state = command.data;
+    def command_subscriber(self, command_str):
+        command = json.loads(command_str.data);
         # daca am primit o comanda de start
-        if(self.state == "START"):
+        if((command['state'] == "START") and (int(command['contor']) > self.contor)):
+            self.state = command['state'];
+            self.contor = int(command['contor']);
             #preiau pozitia curenta
             reply = None;
             while True:
@@ -125,7 +129,7 @@ class LookUpLogicManager:
             self.move_base_actionlib_client.wait_for_result(rospy.Duration(8));
             # dupa raspund sistemului central ca m-am pozitionat ca acesta sa poata continua
             # experimentul
-            self.rep_pub.publish(json.dumps({'state':'CENTER', 'people':max_people}));
+            self.rep_pub.publish(json.dumps({'state':'CENTER', 'people':max_people, 'contor':self.contor}));
             self.rate.sleep();
             self.state = "STOP";
 

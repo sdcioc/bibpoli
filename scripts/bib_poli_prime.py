@@ -273,6 +273,10 @@ class LogicManager:
                     '/bibpoli/rosbag/cmd',
                         std_msgs.msg.String,
                         latch=True, queue_size=5);
+        self.web_pub = rospy.Publisher(
+                    '/web/go_to',
+                        pal_web_msgs.msg.WebGoTo,
+                        latch=True, queue_size=5);
         # asteptare pentru inregistrarea topicurilor
         rospy.sleep(3);
         # subscriber pentru comenzile catre sistemul central
@@ -458,9 +462,11 @@ class LogicManager:
                 if(self.tries == 3):
                     event = {};
                     event['pose'] = {};
+                    event['pose']['position'] = {};
                     event['pose']['position']['x'] = self.current_position.position.x;
                     event['pose']['position']['y'] = self.current_position.position.y;
                     event['pose']['position']['z'] = self.current_position.position.z;
+                    event['pose']['orientation'] = {};
                     event['pose']['orientation']['x'] = self.current_position.orientation.x;
                     event['pose']['orientation']['y'] = self.current_position.orientation.y;
                     event['pose']['orientation']['z'] = self.current_position.orientation.z;
@@ -525,7 +531,7 @@ class LogicManager:
             rospy.loginfo("[MANUAL SPEAK INITIAL] ARRIVED AT ENSTA");
         else:
             # trimitem comanda pentru modul de cautare a personelor
-            self.look_after_pub.publish("START");
+            self.look_after_pub.publish(json.dumps({'state':"START", 'contor': self.contor}));
             # Asteptam ca acest modul sa centralizeze o persoana
             while True:
                 response = rospy.wait_for_message(
@@ -533,7 +539,7 @@ class LogicManager:
                     std_msgs.msg.String);
                 rospy.loginfo("[AUTONOMOUS_EXPERIMENT] getting from /bibpoli/lookup_rep:\n {}".format(response));
                 response_dict = json.loads(response.data);
-                if (response_dict['state'] == "CENTER"):
+                if ((response_dict['state'] == "CENTER") and (int(response_dict['contor']) == self.contor)):
                     event = {};
                     event['people'] = response_dict['people'];
                     event['contor'] = self.contor;
@@ -649,6 +655,12 @@ class LogicManager:
         rosbag_command['state'] = "STOP";
         rosbag_command['contor'] = self.contor;
         self.rosbag_pub.publish(json.dumps(rosbag_command));
+        self.rate.sleep();
+        web_msg = pal_web_msgs.msg.WebGoTo();
+        web_msg.type = 3;
+        web_msg.value = "/static/webapps/client/bibpoli/index.html";
+        self.web_pub.publish(web_msg);
+        self.rate.sleep();
 
     # comanda de a merge in starea stop
     def stop_command(self, command):

@@ -71,12 +71,12 @@ function start_questions(){
     $('.btn-ans').unbind().click(function(){});
     // increment the question number
     quest.no_question = quest.no_question + 1;
-    if (quest.no_question == 29) {
+    if (quest.no_question == 7) {
         // This means that I reached the end:
         endGame();
     }else{
 
-    $('#quest_no').html('Question ' + quest.no_question.toString() + '/28')
+    $('#quest_no').html('Question ' + quest.no_question.toString() + '/6')
 
     // load the question:
     chest = 'q' + quest.no_question;
