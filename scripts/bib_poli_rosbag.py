@@ -38,8 +38,11 @@ class RosbagManager:
     # calbbackul pentru comenzi (setez dinainte contorul ca sa nu inceapa sa inregistreze pe vechiul contor)
     def command_subscriber(self, command):
         my_dict = json.loads(command.data);
-        self.contor = my_dict['contor'];
-        self.state = my_dict['state'];
+        if((self.contor < int(my_dict['contor'])) and (my_dict['state'] == "START")):
+            self.contor = int(my_dict['contor']);
+            self.state = my_dict['state'];
+        elif((self.contor == int(my_dict['contor'])) and (my_dict['state'] == "STOP")):
+            self.state = my_dict['state'];
 
 if __name__ == '__main__':
     rospy.init_node('bibpoli_rosbag_node', anonymous=True);

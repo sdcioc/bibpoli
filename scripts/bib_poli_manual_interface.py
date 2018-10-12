@@ -80,6 +80,7 @@ class ExperimentManualCommandManager:
     def send_manual_experiment_command(self, speed, introduction_type, description_type, road_type):
         next_command = {};
         next_command['type'] = "MANUAL_EXPERIMENT";
+        next_command['speed'] = speed;
         next_command['introduction_type'] = introduction_type;
         next_command['description_type'] = description_type;
         next_command['road_type'] = road_type;
@@ -91,6 +92,15 @@ class ExperimentManualCommandManager:
     # trimiterea unel comenzi de stio
     def send_web_endGame_command(self):
         self.web_command_pub.publish("END_GAME");
+        self.rate.sleep();
+
+    # trimiterea unel comenzi de stio
+    def send_start_web_command(self, speed):
+        next_command = {};
+        next_command['type'] = "MANUAL_EXPERIMENT";
+        next_command['speed'] = speed;
+        print """[INFO][MANUAL_COMMAND] sending MANUAL_EXPERIMENT with speed: {}""".format(speed);
+        self.command_pub.publish(json.dumps(next_command));
         self.rate.sleep();
 
 if __name__ == '__main__':
@@ -121,7 +131,9 @@ if __name__ == '__main__':
                     8 : NEXT_POI\n
                     9 : EXIT\n
                     10 : PLAY_NO_HEARING\n
-                    11 : WEB_END_GAME
+                    11 : WEB_END_GAME\n
+                    12 : START_WEB_COMMAND\n
+
                     """
             command_number = int(raw_input("Enter your command:\n"));
             if (command_number == 0):
@@ -149,6 +161,9 @@ if __name__ == '__main__':
                 emc.send_manual_experiment_command(speed, introduction_type, description_type, road_type);
             elif (command_number == 11):
                 emc.send_web_endGame_command();
+            elif (command_number == 12):
+                speed = int(raw_input("Enter speed:"));
+                emc.send_start_web_command(speed);
             else:
                 command_type = "";
                 if (command_number == 6):

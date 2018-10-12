@@ -114,7 +114,7 @@ class SoundManager:
         rospy.set_param(self.playback_volume_param, 76);
         #calea catre pachet si catre directorul cu fisierele audio
         rospack = rospkg.RosPack();
-        self.prefix = rospack.get_path('bib_poli_package') + "/config/sounds/fete/";
+        self.prefix = rospack.get_path('bib_poli_package') + "/config/sounds/";
     
     #redarea mesajul de introducere
     def play_introduction(self, message_type, speed):
@@ -122,20 +122,7 @@ class SoundManager:
         if(message_type == 0):
             command = command + "1";
         else:
-            command = command + "3";
-        if(speed == 1):
-            command = command + "m.wav";
-        else:
-            command = command + ".wav";
-        subprocess.check_output(command.split());
-    
-    #redarea mesajului de descriere a robotului
-    def play_robot_description(self, message_type, speed):
-        command = self.utility + self.prefix;
-        if(message_type == 0):
             command = command + "2";
-        else:
-            command = command + "4";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -146,9 +133,11 @@ class SoundManager:
     def play_ensta_description(self, message_type, speed):
         command = self.utility + self.prefix;
         if(message_type == 0):
-            command = command + "7";
+            command = command + "3";
+        elif(message_type == 1):
+            command = command + "4";
         else:
-            command = command + "8";
+            command = command + "5";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -160,9 +149,9 @@ class SoundManager:
     def play_road_to_ensta(self, message_type, speed):
         command = self.utility + self.prefix;
         if(message_type == 0):
-            command = command + "5";
-        else:
             command = command + "6";
+        else:
+            command = command + "7";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -172,7 +161,7 @@ class SoundManager:
     #redarea mesajului de multumire
     def play_thank_you(self, speed):
         command = self.utility + self.prefix;
-        command = command + "9";
+        command = command + "11";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -182,7 +171,7 @@ class SoundManager:
     #redarea mesajului ca nu poate auzi
     def play_no_hearing(self, speed):
         command = self.utility + self.prefix;
-        command = command + "14";
+        command = command + "12";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -192,7 +181,7 @@ class SoundManager:
     #redarea mesajului pentru completarea chestionarului
     def play_questionaire(self, speed):
         command = self.utility + self.prefix;
-        command = command + "10";
+        command = command + "13";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -204,11 +193,11 @@ class SoundManager:
     def play_let_me_pass(self, message_type, speed):
         command = self.utility + self.prefix;
         if(message_type == 0):
-            command = command + "11";
+            command = command + "8";
         elif(message_type == 1):
-            command = command + "12";
+            command = command + "9";
         else:
-            command = command + "13";
+            command = command + "10";
         if(speed == 1):
             command = command + "m.wav";
         else:
@@ -342,8 +331,6 @@ class LogicManager:
                 self.start_experiment(current_command);
             elif (current_command['type'] == "PLAY_NO_HEARING"):
                 self.play_no_hearing(current_command);
-            elif (current_command['type'] == "START_WEB_COMMAND"):
-                self.start_web_command(current_command);
             else:
                 rospy.loginfo("[COMMAND_CALLBACK] state {} Wrong Command type command {}".format(self.state, current_command['type']));
  
@@ -565,8 +552,7 @@ class LogicManager:
             # din fiecare grupa si viteza de vorbire a robotului
             # se efectueaza experimentul
             # dupa se da comanda pentru trecerea la urmatorul punct de interes
-            #self.experiment(random.randint(0,1), random.randint(0,1), random.randint(0,1), random.randint(0,1), random.randint(0,1));
-            self.experiment(random.randint(0,1), 0, random.randint(0,1), random.randint(0,1), random.randint(0,1));
+            self.experiment(random.randint(0,1), random.randint(0,1), random.randint(0,2), random.randint(0,1))
             next_command = {}
             next_command['type'] = "NEXT_POI";
             self.command_pub.publish(json.dumps(next_command));
@@ -585,11 +571,11 @@ class LogicManager:
             # viteza robotului si tipul de mesaje folosite sunt in cadrul comenzii
             # se efectuaza experimentul cu aceste detalii
             # dupa care se va astepta o noua comanda manuala
-            self.experiment(command['speed'], command['introduction_type'], command['robot_description_type'], command['description_type'], command['road_type'])
+            self.experiment(command['speed'], command['introduction_type'], command['description_type'], command['road_type'])
         #multiple computations
         rospy.sleep(4);
     
-    def experiment(self, speed, introduction_type, robot_description_type, description_type, road_type):
+    def experiment(self, speed, introduction_type, description_type, road_type):
         # se incepe cu mesajul de introducere, dupa mesajul de descriere pentru ensta
         # mesajul pentru ruta catre ensta si afisarea hartii cu calea catre standul ENSTA
         # pe interfata robotului si spunerea mesajului de multumire prin care il roaga
@@ -612,44 +598,23 @@ class LogicManager:
         self.events.append(copy.deepcopy(event));
         self.sound_manager.play_introduction(introduction_type, speed);
         rospy.sleep(1);
-        self.sound_manager.play_robot_description(robot_description_type, speed);
+        self.sound_manager.play_ensta_description(description_type, speed);
         rospy.sleep(1);
-        #self.sound_manager.play_ensta_description(description_type, speed);
-        #rospy.sleep(1);
-        #event = {};
-        #event['contor'] = self.contor;
-        #event['type']= "SHOW_MAP";
-        #event['poi_name'] = self.poi_name;
-        #event['time'] = rospy.get_time();
-        #self.events.append(copy.deepcopy(event));
-        #self.web_cmd_pub.publish("SHOW_MAP");
-        #self.rate.sleep();
-        #self.sound_manager.play_road_to_ensta(road_type, speed);
-        #rospy.sleep(7);
+        event = {};
+        event['contor'] = self.contor;
+        event['type']= "SHOW_MAP";
+        event['poi_name'] = self.poi_name;
+        event['time'] = rospy.get_time();
+        self.events.append(copy.deepcopy(event));
+        self.web_cmd_pub.publish("SHOW_MAP");
+        self.rate.sleep();
+        self.sound_manager.play_road_to_ensta(road_type, speed);
+        rospy.sleep(7);
         self.sound_manager.play_thank_you(speed);
         # chestionar
         # se afiseaza chestionarul dupa care se asteapta
         # pornirea si terminarea chestioanrului de catre participant
         rospy.sleep(1);
-        self.start_web_experiment(speed);
-        # se opreste inregistrarea rosbagului
-        rosbag_command = {};
-        rosbag_command['state'] = "STOP";
-        rosbag_command['contor'] = self.contor;
-        self.rosbag_pub.publish(json.dumps(rosbag_command));
-        self.rate.sleep();
-        web_msg = pal_web_msgs.msg.WebGoTo();
-        web_msg.type = 3;
-        web_msg.value = "/static/webapps/client/bibpoli/index.html";
-        self.web_pub.publish(web_msg);
-        self.rate.sleep();
-
-    def start_web_command(self, command):
-        speed = command["speed"];
-        self.start_web_experiment(speed);
-
-    # comanda pentru inceperea experimentului pe interfata web
-    def start_web_experiment(self, speed):
         self.sound_manager.play_questionaire(speed);
         event = {};
         event['contor'] = self.contor;
@@ -685,6 +650,17 @@ class LogicManager:
         event['poi_name'] = self.poi_name;
         event['time'] = rospy.get_time();
         self.events.append(copy.deepcopy(event));
+        # se opreste inregistrarea rosbagului
+        rosbag_command = {};
+        rosbag_command['state'] = "STOP";
+        rosbag_command['contor'] = self.contor;
+        self.rosbag_pub.publish(json.dumps(rosbag_command));
+        self.rate.sleep();
+        web_msg = pal_web_msgs.msg.WebGoTo();
+        web_msg.type = 3;
+        web_msg.value = "/static/webapps/client/bibpoli/index.html";
+        self.web_pub.publish(web_msg);
+        self.rate.sleep();
 
     # comanda de a merge in starea stop
     def stop_command(self, command):
