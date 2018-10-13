@@ -153,12 +153,14 @@ install(PROGRAMS
   scripts/bib_poli_face_dect.py
   scripts/bib_poli_key_teleop.py
   scripts/bib_poli_manual_interface.py
+  scripts/bib_poli_manual_interface_fete.py
   scripts/bib_poli_poi_manager.py
   scripts/bib_poli_look_after.py
   scripts/bib_poli_look_after_old.py
   scripts/bib_poli_install_http.sh
   scripts/bib_poli_record_audio.sh
   scripts/bib_poli_rosbag.py
+  scripts/bib_poli_rosbag_fete.py
   scripts/bib_poli_rosbag_merge.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )

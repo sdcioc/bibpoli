@@ -48,6 +48,8 @@
         Record rosbag on the contor
         -->
         <node pkg="bib_poli_package" type="bib_poli_rosbag.py" name="bib_poli_rosbag" output="screen"/>
+        <node pkg="bib_poli_package" type="bib_poli_rosbag_fete.py" name="bib_poli_rosbag_fete" output="screen"/>
+
 
         <!--
         Record audio
