@@ -148,6 +148,8 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   scripts/bib_poli_prime.py
+  scripts/bib_poli_prime_fete.py
+  scripts/bib_poli_prime_xforum.py
   scripts/bib_poli_face_dect.py
   scripts/bib_poli_key_teleop.py
   scripts/bib_poli_manual_interface.py
